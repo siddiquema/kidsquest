@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1b2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>KidQuest ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0d1b2a;
+  --card:    #1a2f47;
+  --card-hi: #1f3a58;
+  --gold:    #ffd166;
+  --green:   #06d6a0;
+  --meal:    #ff6b6b;
+  --meal-bg: #2d0f0f;
+  --tv:      #a78bfa;
+  --tv-bg:   #1a0f2d;
+  --story:   #38bdf8;
+  --alarm:   #fb923c;
+  --alarm-bg:#2d1500;
+  --text:    #f0f4f8;
+  --muted:   #6b8caa;
+  --r:18px; --r-sm:12px;
+  --shadow:0 6px 24px rgba(0,0,0,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100%;background:var(--bg);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:600;}
+body{
+  background-image:
+    radial-gradient(ellipse at 0% 0%,rgba(244,162,97,.12) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(167,139,250,.12) 0%,transparent 55%);
+  padding-bottom:48px;
+}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:52px 20px 14px;}
+.app-logo{font-family:'Fredoka One',cursive;font-size:28px;background:linear-gradient(120deg,var(--gold),#f4a261,#e76f9a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.app-tagline{font-size:12px;color:var(--muted);}
+.header-right{font-size:32px;}
+
+/* ── KIDS STRIP ── */
+.kids-strip{display:flex;gap:10px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none;}
+.kids-strip::-webkit-scrollbar{display:none;}
+.kid-chip{flex-shrink:0;display:flex;align-items:center;gap:7px;background:var(--card);border-radius:30px;padding:7px 14px 7px 10px;border:1.5px solid rgba(255,255,255,0.08);}
+.kid-chip-emoji{font-size:18px;}
+.kid-chip-name{font-family:'Fredoka One',cursive;font-size:14px;line-height:1.1;}
+.kid-chip-age{font-size:10px;color:var(--muted);}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:8px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab-btn{flex-shrink:0;padding:9px 16px;border-radius:30px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{background:var(--card-hi);border-color:var(--gold);color:var(--gold);}
+
+/* ── PANELS ── */
+.panel{display:none;padding:0 14px;animation:fadeUp .3s ease;}
+.panel.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.sec-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:0 4px 10px;}
+
+/* ── LEADERBOARD ── */
+.dash-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.ds-card{background:var(--card);border-radius:var(--r);padding:16px 14px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.06);text-align:center;}
+.ds-card.day{border-top:3px solid var(--green);}
+.ds-card.week{border-top:3px solid var(--gold);}
+.ds-label{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:700;margin-bottom:8px;}
+.ds-num{font-family:'Fredoka One',cursive;font-size:40px;line-height:1;}
+.ds-card.day .ds-num{color:var(--green);}
+.ds-card.week .ds-num{color:var(--gold);}
+.ds-unit{font-size:11px;color:var(--muted);font-weight:700;margin-top:2px;}
+.ds-break{font-size:12px;font-weight:700;color:var(--text);margin-top:8px;letter-spacing:.3px;}
+.ds-leader{font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;}
+
+.lb-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.lb-card{background:var(--card);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px;border-left:4px solid var(--kc,var(--muted));box-shadow:var(--shadow);}
+.lb-medal{font-size:26px;flex-shrink:0;}
+.lb-info{flex:1;min-width:0;}
+.lb-name{font-family:'Fredoka One',cursive;font-size:18px;line-height:1;color:var(--kc,var(--text));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-age{font-size:11px;color:var(--muted);margin-top:2px;}
+.lb-stats{display:flex;gap:12px;margin-right:4px;flex-shrink:0;}
+.lb-stat{text-align:center;min-width:32px;}
+.lb-stat .v{font-family:'Fredoka One',cursive;font-size:20px;line-height:1;transition:transform .15s;}
+.lb-stat.day .v{color:var(--green);}
+.lb-stat.week .v{color:var(--gold);}
+.lb-stat .l{font-size:8.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin-top:3px;}
+.bump{animation:bump .36s cubic-bezier(.34,1.56,.64,1);}
+@keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.4)}100%{transform:scale(1)}}
+.plus-btn{width:40px;height:40px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--green),#05b38a);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(6,214,160,.4);flex-shrink:0;transition:transform .15s;}
+.plus-btn:active{transform:scale(.84);}
+
+/* ── BONUS CHOOSER MODAL ── */
+.bonus-overlay{display:none;position:fixed;inset:0;z-index:2600;background:rgba(13,27,42,.82);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px;}
+.bonus-overlay.show{display:flex;animation:fadeUp .25s ease;}
+.bonus-modal{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:24px;width:100%;max-width:320px;text-align:center;box-shadow:var(--shadow);}
+.bonus-title{font-family:'Fredoka One',cursive;font-size:22px;margin-bottom:4px;}
+.bonus-sub{font-size:12px;color:var(--muted);margin-bottom:20px;font-weight:600;}
+.bonus-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.bonus-amt{padding:18px;border-radius:var(--r-sm);border:none;cursor:pointer;background:linear-gradient(135deg,var(--green),#05b38a);color:#fff;font-family:'Fredoka One',cursive;font-size:24px;transition:transform .12s;box-shadow:0 4px 12px rgba(6,214,160,.3);}
+.bonus-amt:active{transform:scale(.92);}
+.bonus-cancel{background:none;border:none;color:var(--muted);font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;cursor:pointer;padding:6px;}
+
+/* ── TIMERS ── */
+.kid-block{margin-bottom:18px;}
+.kid-block-header{display:flex;align-items:center;gap:8px;padding:0 4px;margin-bottom:10px;}
+.kid-block-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.06);border:2px solid var(--kc,var(--muted));flex-shrink:0;}
+.kid-block-name{font-family:'Fredoka One',cursive;font-size:17px;color:var(--kc,var(--text));}
+.timers-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.timer-box{border-radius:var(--r);padding:14px 10px 12px;text-align:center;border:1.5px solid rgba(255,255,255,0.07);transition:box-shadow .2s;user-select:none;-webkit-user-select:none;position:relative;}
+.timer-box.meal{background:var(--meal-bg);}
+.timer-box.tv{background:var(--tv-bg);}
+.timer-box.running.meal{border-color:var(--meal);box-shadow:0 0 18px rgba(255,107,107,.25);}
+.timer-box.running.tv{border-color:var(--tv);box-shadow:0 0 18px rgba(167,139,250,.25);}
+.timer-icon{font-size:20px;display:block;margin-bottom:3px;}
+.timer-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px;}
+.meal .timer-type{color:var(--meal);}
+.tv   .timer-type{color:var(--tv);}
+.timer-digits{font-family:'Fredoka One',cursive;font-size:28px;line-height:1;margin-bottom:8px;transition:color .3s;}
+.meal .timer-digits{color:#ffcaca;}
+.tv   .timer-digits{color:#ddd4ff;}
+.timer-digits.expired{color:#ff3b3b!important;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* timer control row */
+.timer-controls{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;}
+.tc-btn{border:none;border-radius:20px;font-family:'Quicksand',sans-serif;font-weight:700;font-size:11px;cursor:pointer;padding:5px 12px;transition:transform .15s,opacity .15s;}
+.tc-btn:active{transform:scale(.9);}
+.tc-start{background:rgba(255,255,255,.12);color:var(--text);}
+.tc-reset{background:rgba(255,255,255,.07);color:var(--muted);}
+.tc-btn:disabled{opacity:.35;pointer-events:none;}
+
+.divider{height:1px;background:rgba(255,255,255,.05);margin:14px 4px 18px;}
+
+/* ── ALARMS ── */
+.alarm-list{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+.alarm-card{background:var(--card);border-radius:var(--r);padding:16px;border:1.5px solid rgba(251,146,60,.13);box-shadow:var(--shadow);}
+.alarm-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.alarm-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.06);border:2px solid var(--kc,var(--muted));flex-shrink:0;}
+.alarm-name{font-family:'Fredoka One',cursive;font-size:17px;color:var(--kc,var(--text));flex:1;}
+.alarm-status-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s;}
+.alarm-status-dot.on{background:var(--alarm);box-shadow:0 0 8px rgba(251,146,60,.6);}
+
+.alarm-time-row{display:flex;align-items:center;gap:10px;}
+.alarm-time-input{
+  flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(251,146,60,.25);
+  border-radius:var(--r-sm);color:var(--text);font-family:'Fredoka One',cursive;
+  font-size:26px;padding:10px 14px;outline:none;
+  -webkit-appearance:none;appearance:none;
+  color-scheme:dark;
+}
+.alarm-time-input:focus{border-color:var(--alarm);box-shadow:0 0 0 3px rgba(251,146,60,.18);}
+.alarm-toggle{
+  width:52px;height:30px;border-radius:15px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.1);position:relative;flex-shrink:0;transition:background .25s;
+}
+.alarm-toggle.on{background:var(--alarm);}
+.alarm-toggle::after{
+  content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;
+  border-radius:50%;background:#fff;transition:transform .25s;
+  box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
+.alarm-toggle.on::after{transform:translateX(22px);}
+.alarm-label{font-size:11px;color:var(--muted);margin-top:8px;font-weight:700;}
+
+/* ringing overlay */
+.ring-overlay{
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(13,27,42,.92);backdrop-filter:blur(6px);
+  flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  animation:fadeUp .3s ease;
+}
+.ring-overlay.show{display:flex;}
+.ring-emoji{font-size:80px;animation:ringBounce 0.5s ease infinite alternate;}
+@keyframes ringBounce{from{transform:scale(.9) rotate(-8deg)}to{transform:scale(1.1) rotate(8deg)}}
+.ring-name{font-family:'Fredoka One',cursive;font-size:36px;text-align:center;line-height:1.2;}
+.ring-sub{font-size:16px;color:var(--muted);text-align:center;}
+.ring-dismiss{
+  margin-top:10px;padding:16px 36px;border:none;border-radius:50px;
+  background:linear-gradient(135deg,var(--alarm),#f97316);
+  color:#fff;font-family:'Fredoka One',cursive;font-size:22px;
+  cursor:pointer;box-shadow:0 6px 20px rgba(251,146,60,.45);
+  transition:transform .15s;
+}
+.ring-dismiss:active{transform:scale(.95);}
+
+/* ── STORIES ── */
+.stories-list{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+.story-card{background:var(--card);border-radius:var(--r);padding:18px 16px;border:1.5px solid rgba(56,189,248,.13);box-shadow:var(--shadow);cursor:pointer;position:relative;overflow:hidden;}
+.story-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(56,189,248,.04),transparent);pointer-events:none;}
+.story-card.playing{border-color:var(--story);box-shadow:0 0 22px rgba(56,189,248,.25);}
+.story-top{display:flex;align-items:center;gap:12px;}
+.story-emoji{font-size:36px;flex-shrink:0;}
+.story-meta{flex:1;}
+.story-title{font-family:'Fredoka One',cursive;font-size:17px;color:var(--text);line-height:1.2;margin-bottom:3px;}
+.story-desc{font-size:12px;color:var(--muted);line-height:1.4;}
+.story-ctrl{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--story),#0ea5e9);border:none;cursor:pointer;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(56,189,248,.4);transition:transform .15s;flex-shrink:0;}
+.story-ctrl:active{transform:scale(.88);}
+.story-progress-bar{height:3px;background:rgba(56,189,248,.15);border-radius:2px;margin-top:12px;overflow:hidden;display:none;}
+.story-card.playing .story-progress-bar{display:block;}
+.story-progress-fill{height:100%;background:linear-gradient(90deg,var(--story),#0ea5e9);border-radius:2px;width:0%;}
+
+/* speed control */
+.story-speed-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.speed-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.speed-btn{padding:5px 12px;border-radius:20px;border:1.5px solid rgba(56,189,248,.25);background:transparent;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.speed-btn.active{background:rgba(56,189,248,.15);border-color:var(--story);color:var(--story);}
+
+.now-playing-banner{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:var(--r-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:13px;color:var(--story);font-weight:700;}
+.wave-bars span{display:inline-block;width:3px;height:12px;background:var(--story);border-radius:2px;margin:0 1px;animation:waveBar 1.2s ease infinite;}
+.wave-bars span:nth-child(2){animation-delay:.15s;}
+.wave-bars span:nth-child(3){animation-delay:.3s;}
+.wave-bars span:nth-child(4){animation-delay:.15s;}
+@keyframes waveBar{0%,100%{transform:scaleY(.6)}50%{transform:scaleY(1.5)}}
+.stop-btn{margin-left:auto;background:none;border:none;color:var(--meal);font-size:14px;font-weight:700;cursor:pointer;padding:4px 8px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:linear-gradient(135deg,var(--green),#05b38a);color:#0d1b2a;font-size:13px;font-weight:700;padding:10px 20px;border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:999;white-space:nowrap;transition:transform .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── STAR BURST ── */
+.star-burst{position:fixed;pointer-events:none;z-index:1000;font-size:26px;animation:starFly .75s ease forwards;}
+@keyframes starFly{0%{opacity:1;transform:scale(.5) translateY(0)}100%{opacity:0;transform:scale(1.8) translateY(-70px)}}
+
+.reset-zone{text-align:center;padding:20px 16px 32px;}
+.reset-btn{background:none;border:1px solid rgba(255,255,255,.1);color:var(--muted);font-family:'Quicksand',sans-serif;font-size:12px;font-weight:700;padding:8px 18px;border-radius:20px;cursor:pointer;transition:border-color .2s,color .2s;}
+.reset-btn:hover{border-color:var(--meal);color:var(--meal);}
+
+/* ── BEHAVIOR CHART ── */
+.chart-kid-tabs{display:flex;gap:8px;margin-bottom:12px;padding:0 4px;overflow-x:auto;scrollbar-width:none;}
+.chart-kid-tabs::-webkit-scrollbar{display:none;}
+.ck-tab{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:30px;border:1.5px solid rgba(255,255,255,.1);background:transparent;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.ck-tab.active{background:rgba(255,255,255,.06);}
+.chart-legend{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:0 4px;margin-bottom:12px;font-size:11px;color:var(--muted);font-weight:700;}
+.chart-legend .leg{display:flex;align-items:center;gap:4px;}
+.chart-legend .leg-ic{font-size:14px;}
+.chart-legend .leg-hint{margin-left:auto;font-style:italic;font-weight:600;color:var(--muted);opacity:.7;}
+
+.chart-scroll{overflow-x:auto;border-radius:var(--r);background:var(--card);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.06);-webkit-overflow-scrolling:touch;}
+.chart-scroll::-webkit-scrollbar{height:6px;}
+.chart-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px;}
+
+.chart-grid{display:grid;grid-template-columns:138px repeat(7,46px);min-width:max-content;}
+.cg-cell{display:flex;align-items:center;justify-content:center;height:44px;border-bottom:1px solid rgba(255,255,255,.04);border-right:1px solid rgba(255,255,255,.04);font-size:20px;}
+.cg-corner{position:sticky;left:0;z-index:3;background:var(--card-hi);border-bottom:1px solid rgba(255,255,255,.08);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;justify-content:flex-start;padding-left:12px;}
+.cg-dayhead{background:var(--card-hi);font-family:'Fredoka One',cursive;font-size:12px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.08);}
+.cg-dayhead.today{color:var(--gold);background:rgba(255,209,102,.1);}
+.cg-rowhead{position:sticky;left:0;z-index:2;background:var(--card);justify-content:flex-start;padding-left:12px;font-size:11.5px;font-weight:700;color:var(--text);text-align:left;line-height:1.15;}
+.cg-rowhead.alt{background:#162840;}
+.cg-cell.alt{background:rgba(255,255,255,.012);}
+.cg-star{cursor:pointer;transition:transform .12s,background .15s;}
+.cg-star:active{transform:scale(.8);}
+.cg-star.today-col{background:rgba(255,209,102,.05);}
+.cg-dash{color:#3a5070;font-weight:700;}
+
+.chart-totals{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.ct-pill{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:30px;padding:8px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.ct-pill .ct-big{font-family:'Fredoka One',cursive;font-size:18px;color:var(--gold);}
+
+/* ── PARENT LOCK SCREEN ── */
+.lock-app-btn{
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);
+  font-size:20px;width:46px;height:46px;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .15s,border-color .2s;
+}
+.lock-app-btn:active{transform:scale(.88);}
+.lock-app-btn:hover{border-color:var(--gold);}
+
+.lock-screen{
+  display:none;position:fixed;inset:0;z-index:3000;
+  background:
+    radial-gradient(ellipse at 30% 20%,rgba(244,162,97,.15) 0%,transparent 55%),
+    radial-gradient(ellipse at 70% 90%,rgba(167,139,250,.15) 0%,transparent 55%),
+    var(--bg);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;overflow-y:auto;
+}
+.lock-screen.show{display:flex;animation:fadeUp .35s ease;}
+.lock-inner{width:100%;max-width:320px;text-align:center;}
+.lock-logo{font-family:'Fredoka One',cursive;font-size:30px;background:linear-gradient(120deg,var(--gold),#f4a261,#e76f9a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:24px;}
+.lock-icon{font-size:48px;margin-bottom:14px;transition:transform .2s;}
+.lock-icon.shake{animation:lockShake .4s ease;}
+@keyframes lockShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.lock-title{font-family:'Fredoka One',cursive;font-size:22px;margin-bottom:6px;}
+.lock-sub{font-size:13px;color:var(--muted);margin-bottom:26px;font-weight:600;min-height:18px;}
+.lock-sub.err{color:var(--meal);}
+
+.pin-dots{display:flex;gap:16px;justify-content:center;margin-bottom:34px;}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--muted);transition:all .15s;}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(255,209,102,.5);}
+
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:280px;margin:0 auto;}
+.pin-key{
+  height:66px;border-radius:50%;border:1.5px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);color:var(--text);
+  font-family:'Fredoka One',cursive;font-size:24px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .1s,background .15s;
+}
+.pin-key:active{transform:scale(.9);background:rgba(255,255,255,.14);}
+.pin-blank{border:none;background:none;pointer-events:none;}
+.pin-del{font-size:20px;color:var(--muted);}
+.pin-forgot{margin-top:24px;background:none;border:none;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+
+/* ── SPLASH ── */
+.splash{
+  display:none;position:fixed;inset:0;z-index:4000;
+  background:
+    radial-gradient(ellipse at 30% 20%,rgba(244,162,97,.18) 0%,transparent 55%),
+    radial-gradient(ellipse at 70% 90%,rgba(167,139,250,.18) 0%,transparent 55%),
+    var(--bg);
+  flex-direction:column;align-items:center;justify-content:center;
+}
+.splash.show{display:flex;animation:fadeUp .4s ease;}
+.splash.hiding{animation:splashOut .5s ease forwards;}
+@keyframes splashOut{to{opacity:0;visibility:hidden;}}
+.splash-inner{text-align:center;}
+.splash-emoji{font-size:72px;margin-bottom:18px;animation:splashBob 1.6s ease-in-out infinite;}
+@keyframes splashBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14px) rotate(3deg)}}
+.splash-logo{font-family:'Fredoka One',cursive;font-size:42px;background:linear-gradient(120deg,var(--gold),#f4a261,#e76f9a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+.splash-tag{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:30px;}
+.splash-dots{display:flex;gap:8px;justify-content:center;}
+.splash-dots span{width:9px;height:9px;border-radius:50%;background:var(--gold);animation:splashDot 1.2s ease-in-out infinite;}
+.splash-dots span:nth-child(2){animation-delay:.2s;}
+.splash-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes splashDot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+
+/* ── ONBOARDING ── */
+.onboarding{
+  display:none;position:fixed;inset:0;z-index:3500;
+  background:
+    radial-gradient(ellipse at 30% 10%,rgba(244,162,97,.12) 0%,transparent 55%),
+    radial-gradient(ellipse at 70% 100%,rgba(167,139,250,.12) 0%,transparent 55%),
+    var(--bg);
+  align-items:center;justify-content:center;padding:24px;overflow-y:auto;
+}
+.onboarding.show{display:flex;animation:fadeUp .35s ease;}
+.onb-inner{width:100%;max-width:380px;text-align:center;}
+.onb-emoji{font-size:54px;margin-bottom:14px;}
+.onb-title{font-family:'Fredoka One',cursive;font-size:26px;margin-bottom:8px;}
+.onb-sub{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:28px;line-height:1.5;}
+
+.onb-counter{display:flex;align-items:center;justify-content:center;gap:24px;margin-bottom:6px;}
+.onb-counter-btn{width:54px;height:54px;border-radius:50%;border:none;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);color:var(--text);font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s,background .15s;}
+.onb-counter-btn:active{transform:scale(.88);background:rgba(255,255,255,.14);}
+.onb-count{font-family:'Fredoka One',cursive;font-size:56px;color:var(--gold);min-width:70px;}
+.onb-counter-label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:32px;}
+
+.ob-kid-list{display:flex;flex-direction:column;gap:12px;margin-bottom:26px;text-align:left;}
+.ob-kid-row{display:flex;align-items:center;gap:10px;}
+.ob-kid-emoji{font-size:26px;flex-shrink:0;width:36px;text-align:center;}
+.ob-input{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:var(--r-sm);color:var(--text);font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;padding:12px 14px;outline:none;transition:border-color .2s;}
+.ob-input:focus{border-color:var(--gold);}
+.ob-name{flex:1;min-width:0;}
+.ob-age{width:74px;flex-shrink:0;text-align:center;-moz-appearance:textfield;}
+.ob-age::-webkit-outer-spin-button,.ob-age::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+
+.onb-next{width:100%;padding:16px;border:none;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--gold),#f4a261);color:#1a1205;font-family:'Fredoka One',cursive;font-size:18px;cursor:pointer;box-shadow:0 6px 20px rgba(255,209,102,.35);transition:transform .15s;}
+.onb-next:active{transform:scale(.97);}
+.onb-back{margin-top:14px;background:none;border:none;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — phones · tablets · desktop · TV
+   ═══════════════════════════════════════ */
+
+/* Base wrapper centers and grows with viewport */
+.app-wrapper{width:100%;margin:0 auto;}
+
+/* ---- Very small phones (≤359px) : tighten spacing ---- */
+@media (max-width:359px){
+  .header{padding:44px 14px 12px;}
+  .app-logo{font-size:24px;}
+  .tabs{padding:0 12px 14px;gap:6px;}
+  .tab-btn{padding:8px 12px;font-size:12px;}
+  .panel{padding:0 10px;}
+  .lb-name{font-size:15px;}
+  .lb-stats{gap:8px;}
+  .lb-stat .v{font-size:18px;}
+  .lb-stat{min-width:28px;}
+  .ds-num{font-size:34px;}
+  .plus-btn{width:36px;height:36px;font-size:20px;}
+  .timer-digits{font-size:24px;}
+  .chart-grid{grid-template-columns:118px repeat(7,40px);}
+  .cg-cell{height:40px;font-size:18px;}
+  .pin-key{height:58px;font-size:22px;}
+}
+
+/* ---- Standard phones (360–599px) ---- */
+@media (min-width:360px) and (max-width:599px){
+  .app-wrapper{max-width:480px;}
+}
+
+/* ---- Large phones / small tablets (600–767px) ---- */
+@media (min-width:600px){
+  .app-wrapper{max-width:560px;}
+  .tabs{justify-content:center;flex-wrap:wrap;overflow-x:visible;}
+  .kids-strip{justify-content:center;flex-wrap:wrap;overflow-x:visible;}
+}
+
+/* ---- Tablets (768–1023px) : multi-column content ---- */
+@media (min-width:768px){
+  .app-wrapper{max-width:720px;}
+  .header{padding:40px 28px 16px;}
+  .app-logo{font-size:32px;}
+  .tab-btn{font-size:14px;padding:10px 20px;}
+
+  /* two-column blocks where it reads well */
+  .lb-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .alarm-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .stories-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  /* timers: each kid block becomes a roomy card row */
+  .kid-block{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);}
+  .kid-block .divider{display:none;}
+  #timersContainer{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+  .chart-grid{grid-template-columns:160px repeat(7,1fr);min-width:0;}
+}
+
+/* ---- Desktops (1024–1439px) ---- */
+@media (min-width:1024px){
+  .app-wrapper{max-width:920px;}
+  body{padding-bottom:60px;}
+  .lb-list{grid-template-columns:1fr 1fr 1fr;}
+  #timersContainer{grid-template-columns:1fr 1fr 1fr;}
+  .alarm-list{grid-template-columns:1fr 1fr 1fr;}
+  .stories-list{grid-template-columns:1fr 1fr 1fr;}
+  .tab-btn{cursor:pointer;}
+  .tab-btn:hover{border-color:var(--gold);color:var(--gold);}
+}
+
+/* ---- Large desktops & TVs (≥1440px) : scale everything up ---- */
+@media (min-width:1440px){
+  .app-wrapper{max-width:1200px;}
+  html{font-size:18px;}
+  .header{padding:56px 40px 24px;}
+  .app-logo{font-size:42px;}
+  .app-tagline{font-size:15px;}
+  .lock-app-btn{width:56px;height:56px;font-size:24px;}
+  .tabs{gap:12px;}
+  .tab-btn{font-size:17px;padding:13px 28px;}
+  .kid-chip-name{font-size:17px;}
+  .kid-chip-age{font-size:12px;}
+  .sec-label{font-size:13px;}
+  .lb-card{padding:18px 22px;}
+  .lb-medal{font-size:34px;}
+  .lb-name{font-size:22px;}
+  .lb-age{font-size:13px;}
+  .lb-stat .v{font-size:28px;}
+  .lb-stat .l{font-size:11px;}
+  .ds-num{font-size:54px;}
+  .ds-label{font-size:13px;}
+  .plus-btn{width:50px;height:50px;font-size:26px;}
+  .timer-digits{font-size:36px;}
+  .timer-type{font-size:11px;}
+  .story-title{font-size:21px;}
+  .story-desc{font-size:14px;}
+  .story-emoji{font-size:46px;}
+  .alarm-name{font-size:21px;}
+  .alarm-time-input{font-size:32px;}
+  .cg-rowhead{font-size:14px;}
+  .cg-cell{height:54px;font-size:26px;}
+  .cg-dayhead{font-size:15px;}
+}
+
+/* TVs are viewed from afar — bump tap targets a bit more on very wide screens */
+@media (min-width:1920px){
+  .app-wrapper{max-width:1500px;}
+  html{font-size:20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SPLASH SCREEN ═══════ -->
+<div class="splash" id="splash">
+  <div class="splash-inner">
+    <div class="splash-emoji">🏠</div>
+    <div class="splash-logo">KidQuest ✨</div>
+    <div class="splash-tag">Make every day an adventure</div>
+    <div class="splash-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- ═══════ ONBOARDING ═══════ -->
+<div class="onboarding" id="onboarding">
+  <div class="onb-inner">
+
+    <!-- Step 1: how many kids -->
+    <div id="obStep1">
+      <div class="onb-emoji">👨‍👩‍👧‍👦</div>
+      <div class="onb-title">Welcome to KidQuest!</div>
+      <div class="onb-sub">Let's set up your family. How many kids will you be tracking?</div>
+      <div class="onb-counter">
+        <button class="onb-counter-btn" onclick="obChangeCount(-1)">−</button>
+        <div class="onb-count" id="obCount">3</div>
+        <button class="onb-counter-btn" onclick="obChangeCount(1)">+</button>
+      </div>
+      <div class="onb-counter-label">kids (1–10)</div>
+      <button class="onb-next" onclick="obNext()">Next →</button>
+    </div>
+
+    <!-- Step 2: names + ages -->
+    <div id="obStep2" style="display:none;">
+      <div class="onb-emoji">⭐</div>
+      <div class="onb-title">Tell us about them</div>
+      <div class="onb-sub">Add each child's name and age. You can change these later.</div>
+      <div class="ob-kid-list" id="obKidInputs"></div>
+      <button class="onb-next" onclick="obStart()">Start KidQuest 🚀</button>
+      <button class="onb-back" onclick="goOnbStep(1)">← Back</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ PARENT LOCK SCREEN ═══════ -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-inner">
+    <div class="lock-logo">KidQuest ✨</div>
+    <div class="lock-icon" id="lockIcon">🔒</div>
+    <div class="lock-title" id="lockTitle">Parent Lock</div>
+    <div class="lock-sub" id="lockSub">Enter your PIN to unlock</div>
+
+    <div class="pin-dots" id="pinDots">
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+    </div>
+
+    <div class="pin-pad" id="pinPad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key pin-blank"></button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key pin-del" onclick="pinDelete()">⌫</button>
+    </div>
+
+    <button class="pin-forgot" id="pinForgot" onclick="forgotPin()" style="display:none;">Forgot PIN?</button>
+  </div>
+</div>
+
+<div class="app-wrapper">
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="app-logo">KidQuest ✨</div>
+    <div class="app-tagline">Family adventure tracker</div>
+  </div>
+  <button class="lock-app-btn" onclick="lockApp()" title="Lock app">🔒</button>
+</div>
+
+<!-- KIDS STRIP -->
+<div class="kids-strip" id="kidsStrip"></div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active"  onclick="switchTab('leaderboard',this)">🏅 Stars</button>
+  <button class="tab-btn"         onclick="switchTab('chart',this)">📋 Chart</button>
+  <button class="tab-btn"         onclick="switchTab('timers',this)">⏱️ Timers</button>
+  <button class="tab-btn"         onclick="switchTab('alarms',this)">⏰ Wake Up</button>
+  <button class="tab-btn"         onclick="switchTab('stories',this)">📖 Stories</button>
+</div>
+
+<!-- LEADERBOARD PANEL -->
+<div class="panel active" id="panel-leaderboard">
+  <div class="sec-label">Total stars dashboard ⭐</div>
+  <div class="dash-summary" id="dashSummary"></div>
+  <div class="sec-label">Leaderboard — tap + for bonus stars</div>
+  <div class="lb-list" id="lbList"></div>
+  <div class="reset-zone">
+    <button class="reset-btn" onclick="resetPoints()">↺ Reset Bonus Stars</button>
+  </div>
+</div>
+
+<!-- BEHAVIOR CHART PANEL -->
+<div class="panel" id="panel-chart">
+  <div class="sec-label">Weekly behavior chart ⭐</div>
+  <div class="chart-kid-tabs" id="chartKidTabs"></div>
+  <div class="chart-legend">
+    <span class="leg"><span class="leg-ic">🥇</span> Gold</span>
+    <span class="leg"><span class="leg-ic">🥈</span> Silver</span>
+    <span class="leg"><span class="leg-ic" style="color:var(--muted)">—</span> None</span>
+    <span class="leg-hint">Tap a cell to change</span>
+  </div>
+  <div class="chart-scroll">
+    <div class="chart-grid" id="chartGrid"></div>
+  </div>
+  <div class="chart-totals" id="chartTotals"></div>
+  <div class="reset-zone">
+    <button class="reset-btn" onclick="resetChart()">↺ Clear This Week's Chart</button>
+  </div>
+</div>
+
+<!-- TIMERS PANEL -->
+<div class="panel" id="panel-timers">
+  <div class="sec-label">Tap ▶ to start · ⏸ to pause · ↺ to reset</div>
+  <div id="timersContainer"></div>
+  <div style="height:20px"></div>
+</div>
+
+<!-- ALARMS PANEL -->
+<div class="panel" id="panel-alarms">
+  <div class="sec-label">Morning wake-up alarms 🌅</div>
+  <div class="alarm-list" id="alarmList"></div>
+  <div style="height:20px"></div>
+</div>
+
+<!-- STORIES PANEL -->
+<div class="panel" id="panel-stories">
+  <div class="sec-label">Bedtime stories 🌙</div>
+  <div class="now-playing-banner" id="nowPlayingBanner" style="display:none;">
+    <div class="wave-bars"><span></span><span></span><span></span><span></span></div>
+    <span id="nowPlayingText">Playing...</span>
+    <button class="stop-btn" onclick="stopStory()">✕ Stop</button>
+  </div>
+  <div class="story-speed-row">
+    <span class="speed-label">Speed:</span>
+    <button class="speed-btn" onclick="setSpeed(0.75,this)">Slow</button>
+    <button class="speed-btn active" onclick="setSpeed(0.9,this)">Normal</button>
+    <button class="speed-btn" onclick="setSpeed(1.1,this)">Fast</button>
+  </div>
+  <div class="stories-list" id="storiesList"></div>
+  <div style="height:20px"></div>
+</div>
+
+</div><!-- /app-wrapper -->
+
+<!-- RING OVERLAY -->
+<div class="ring-overlay" id="ringOverlay">
+  <div class="ring-emoji" id="ringEmoji">🌅</div>
+  <div class="ring-name" id="ringName">Wake up!</div>
+  <div class="ring-sub">Time to start your day ✨</div>
+  <button class="ring-dismiss" onclick="dismissAlarm()">OK, I'm Up! 🙌</button>
+</div>
+
+<!-- BONUS POINTS CHOOSER -->
+<div class="bonus-overlay" id="bonusOverlay">
+  <div class="bonus-modal">
+    <div class="bonus-title" id="bonusTitle">Bonus Stars</div>
+    <div class="bonus-sub" id="bonusSub">How many bonus stars to add?</div>
+    <div class="bonus-grid">
+      <button class="bonus-amt" onclick="chooseBonus(1)">+1 ⭐</button>
+      <button class="bonus-amt" onclick="chooseBonus(2)">+2 ⭐</button>
+      <button class="bonus-amt" onclick="chooseBonus(5)">+5 ⭐</button>
+      <button class="bonus-amt" onclick="chooseBonus(10)">+10 ⭐</button>
+    </div>
+    <button class="bonus-cancel" onclick="closeBonus()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  KIDS  (dynamic — set during onboarding)
+// ═══════════════════════════════════════
+const EMOJI_POOL = ['🦁','🦋','🐬','🦊','🐼','🐨','🦄','🐸','🐯','🐧'];
+const COLOR_POOL = ['#f4a261','#e76f9a','#4ecdc4','#a78bfa','#06d6a0','#38bdf8','#ffd166','#fb923c','#f472b6','#60a5fa'];
+
+function loadKids(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('kq_kids')||'null');
+    if(Array.isArray(saved) && saved.length) return saved;
+  }catch{}
+  return null;
+}
+function saveKids(list){ localStorage.setItem('kq_kids', JSON.stringify(list)); }
+function enrichKids(list){
+  return list.map((k,i)=>({ name:k.name, age:k.age, emoji:EMOJI_POOL[i%EMOJI_POOL.length], color:COLOR_POOL[i%COLOR_POOL.length] }));
+}
+
+// KIDS starts empty; populated by initFamily() once a profile exists
+let KIDS = [];
+
+// ═══════════════════════════════════════
+//  STORIES DATA
+// ═══════════════════════════════════════
+const STORIES = [
+  {
+    id:'sindbad', emoji:'⛵', title:'Sindbad the Sailor',
+    desc:"A brave sailor's seven incredible voyages across magical seas",
+    sentences: [
+      "Once upon a time, in the great city of Baghdad, there lived a young poor porter named Hindbad.",
+      "One very hot day, feeling tired, he rested outside a grand palace where beautiful music drifted through the windows.",
+      "The palace belonged to Sindbad the Sailor, who invited him inside and told him the story of his seven amazing voyages.",
+      "In his first voyage, Sindbad sailed with merchants across the wide blue sea.",
+      "They stopped to rest on what they thought was a beautiful tropical island.",
+      "But it was actually an enormous sleeping whale!",
+      "When they lit a fire to cook their food, the giant creature suddenly woke up and dove deep into the ocean.",
+      "Sindbad clung to a wooden plank and was eventually rescued by a passing ship.",
+      "On his second voyage, Sindbad discovered a magical valley filled with giant sparkling diamonds, guarded by enormous serpents.",
+      "He cleverly tied himself to a piece of meat that a hungry eagle carried up from the valley, and escaped with his pockets full of diamonds.",
+      "His third voyage brought him face to face with a terrifying one-eyed giant called a Cyclops.",
+      "Sindbad and his brave friends outsmarted the creature using burning torches and escaped on a raft they built themselves.",
+      "During his fourth voyage, Sindbad was buried alive inside a dark underground tomb.",
+      "But his clever mind helped him discover a secret way out, and he returned home wealthier than before.",
+      "On his fifth voyage, he encountered the mighty Roc, a bird so enormous its egg was as big as a house!",
+      "He faced terrible danger but escaped using his quick thinking.",
+      "His sixth voyage brought him to a magical island of extraordinary riches.",
+      "On his seventh and final voyage, he was captured by a strange creature who refused to leave his shoulders.",
+      "Through great patience and cleverness, Sindbad finally tricked the creature and freed himself forever.",
+      "After all seven incredible adventures, Sindbad returned to Baghdad, wealthy, wise, and deeply grateful.",
+      "He shared his fortune with Hindbad and taught him the greatest lesson of all.",
+      "Courage, kindness, and a clever mind can overcome any obstacle in the world.",
+      "And they both lived happily ever after. The End."
+    ]
+  },
+  {
+    id:'frog', emoji:'🐸', title:'Eat the Frog First',
+    desc:'A story about doing your hardest task first — and why it changes everything',
+    sentences: [
+      "Once upon a time, in a cozy little village surrounded by green meadows and singing birds, there lived three young friends.",
+      "Their names were Leo the Lion cub, Bella the Bunny, and Marco the Monkey.",
+      "Every single morning, the three friends had the same challenge.",
+      "Each of them had to eat one slimy, slippery frog before they could enjoy their day.",
+      "The frog was not delicious at all. It was their least favourite thing in the whole world.",
+      "But it was important, and it simply had to be done.",
+      "Leo the Lion cub always said the same thing. I will eat it later.",
+      "He played and ran and rolled in the soft grass all morning long.",
+      "But every single hour, he thought about that waiting frog, and it made all his fun feel a little less fun.",
+      "By afternoon, he was tired and worried, and eating the frog felt twice as hard.",
+      "He went to bed feeling like he had not quite finished his day properly.",
+      "Bella the Bunny was even worse.",
+      "She kept staring at the frog, then quickly looking away.",
+      "Maybe tomorrow, she whispered nervously.",
+      "But tomorrow came, and there were two frogs waiting!",
+      "She hopped in anxious circles until one day she had a whole mountain of frogs, and no idea where to begin.",
+      "But Marco the Monkey had discovered a wonderful secret.",
+      "Every single morning, the very first thing he did was eat the frog.",
+      "He would make a very funny disgusted face. But then, that was it. Done. Finished.",
+      "The entire rest of his day was completely free and bright and joyful.",
+      "He swung through the trees, played with friends, and went to sleep every night feeling proud and peaceful.",
+      "How are you always so happy? asked Leo one day.",
+      "Marco smiled his biggest smile and said, When you do the hardest thing first, everything else feels wonderfully easy.",
+      "The frog does not get bigger when you eat it early. But in your imagination, it grows like a terrible monster when you keep waiting.",
+      "From that day forward, Leo and Bella tried Marco's way.",
+      "And slowly, their days became lighter, brighter, and full of real and lasting joy.",
+      "So remember: whatever feels hard and uncomfortable, do it first.",
+      "Eat the frog early, and the rest of your whole day will taste absolutely wonderful.",
+      "The End."
+    ]
+  },
+  {
+    id:'woodcutter', emoji:'🪓', title:'The Honest Woodcutter',
+    desc:'A timeless tale about honesty, its rewards, and why truth always wins',
+    sentences: [
+      "Long ago, deep in a beautiful forest filled with tall oak trees and singing birds, there lived a kind woodcutter named Ahmad.",
+      "Ahmad was poor. His clothes were worn thin, his house was small, and his tools were old.",
+      "But his heart was as pure and honest as fresh spring water.",
+      "Every single day, Ahmad walked into the forest, cut wood with his plain iron axe, and sold it at the market to feed his family.",
+      "It was hard and tiring work, but Ahmad always did it with a cheerful and grateful heart.",
+      "One warm afternoon, as Ahmad was chopping wood near the edge of a shimmering blue lake, his axe slipped from his tired hands.",
+      "There was a loud splash, and it sank straight to the bottom of the deep water.",
+      "Ahmad sat down by the water and began to weep.",
+      "Without his axe, he could cut no wood. Without wood, he could earn no money. Without money, his children would go hungry.",
+      "What shall I do? he cried into his hands.",
+      "Suddenly, the surface of the lake began to ripple and glow with a soft golden light.",
+      "A shining spirit rose slowly from the water. She was the Guardian of the Lake.",
+      "She smiled gently and asked, Why do you weep so sadly, kind woodcutter?",
+      "Ahmad told her exactly what had happened.",
+      "The Guardian nodded and plunged her hand into the glittering water.",
+      "She returned holding a magnificent golden axe that gleamed like sunlight.",
+      "Is this your axe? she asked.",
+      "Ahmad's eyes went wide with wonder. It was the most beautiful tool he had ever seen.",
+      "But he slowly shook his head. No, kind spirit. That is not mine. My axe was a simple, plain iron axe.",
+      "The Guardian smiled and dipped her hand into the water again.",
+      "This time she returned with a beautiful silver axe, glittering like bright moonlight.",
+      "Is this your axe?",
+      "Ahmad again shook his head gently. No, kind spirit. That is not mine either.",
+      "The Guardian reached into the water one final time and lifted out a wet, rusty, old iron axe.",
+      "Is this your axe? she asked.",
+      "Yes! Ahmad cried with tears of relief and joy. That is my axe! Oh, thank you so very much!",
+      "The Guardian of the Lake felt deeply moved.",
+      "You are a truly honest soul, she said warmly.",
+      "Because you told the truth when you could have claimed something far more valuable, I give you all three axes as your reward.",
+      "Ahmad walked home that evening carrying three axes and tears of gratitude in his eyes.",
+      "He never told a lie, never took what was not his, and his family lived in comfort and happiness for the rest of their days.",
+      "And the lesson the forest remembered for a thousand years was simply this.",
+      "Honesty is not just the right thing to do. It is the most powerful and precious treasure of all.",
+      "The End."
+    ]
+  },
+];
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+// Points are stored as a timestamped log so we can total by day & week.
+// Each entry: { k: kidIndex, ts: epochMillis, n: amount }
+function loadBonus(){ try{ return JSON.parse(localStorage.getItem('kq_bonus')||'null'); }catch{ return null; } }
+function saveBonus(){ localStorage.setItem('kq_bonus', JSON.stringify(bonusLog)); }
+let bonusLog = loadBonus();
+if(bonusLog===null){
+  bonusLog=[];
+  // migrate any old flat point counts into the log (counted as earned today)
+  try{
+    const old=JSON.parse(localStorage.getItem('kq_pts')||'null');
+    if(Array.isArray(old)){
+      const ts=startOfTodayTs();
+      old.forEach((n,i)=>{ if(n>0) bonusLog.push({k:i,ts,n}); });
+    }
+  }catch{}
+  saveBonus();
+}
+
+// ── time helpers ──
+function startOfTodayTs(){ const d=new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+function startOfWeekTs(){ const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-d.getDay()); return d.getTime(); } // Sunday anchor
+function sumSince(idx,sinceTs){ return bonusLog.reduce((s,e)=> (e.k===idx && e.ts>=sinceTs ? s+(e.n||1) : s), 0); }
+function todayPts(idx){ return sumSince(idx, startOfTodayTs()); }
+function weekPts(idx){ return sumSince(idx, startOfWeekTs()); }
+function totalToday(){ return KIDS.reduce((s,_,i)=>s+todayPts(i),0); }
+function totalWeek(){ return KIDS.reduce((s,_,i)=>s+weekPts(i),0); }
+
+function loadAlarms(){
+  try{ const s=JSON.parse(localStorage.getItem('kq_alarms')||'null'); if(Array.isArray(s)&&s.length===KIDS.length) return s; }catch{}
+  return KIDS.map(()=>({time:'07:00',on:false}));
+}
+function saveAlarms(a){ localStorage.setItem('kq_alarms',JSON.stringify(a)); }
+let alarms = [];
+
+const MEAL_SECS=25*60, TV_SECS=20*60;
+let timers = [];
+
+// story
+let storyQueue=[], storySentIdx=0, activeStoryId=null;
+let storySpeed=0.9;
+let alarmCheckInterval=null;
+let ringAudioCtx=null, ringNodes=[];
+let ringingKidIdx=-1;
+
+// ═══════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+//  KIDS STRIP
+// ═══════════════════════════════════════
+function renderKidsStrip(){
+  document.getElementById('kidsStrip').innerHTML=KIDS.map(k=>`
+    <div class="kid-chip">
+      <div class="kid-chip-emoji">${k.emoji}</div>
+      <div>
+        <div class="kid-chip-name" style="color:${k.color}">${k.name}</div>
+        <div class="kid-chip-age">${k.age} yrs</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  LEADERBOARD
+// ═══════════════════════════════════════
+const MEDALS=['🥇','🥈','🥉'];
+
+// ── chart star counters (gold + silver from the behavior chart) ──
+function chartGoldToday(idx){ const t=new Date().getDay(); let c=0; chart[idx].forEach(r=>{ if(r[t]==='gold') c++; }); return c; }
+function chartSilverToday(idx){ const t=new Date().getDay(); let c=0; chart[idx].forEach(r=>{ if(r[t]==='silver') c++; }); return c; }
+function chartGoldWeek(idx){ let c=0; chart[idx].forEach(r=>r.forEach(v=>{ if(v==='gold') c++; })); return c; }
+function chartSilverWeek(idx){ let c=0; chart[idx].forEach(r=>r.forEach(v=>{ if(v==='silver') c++; })); return c; }
+
+// ── combined totals per kid (bonus stars + chart stars) ──
+function kidStarsToday(idx){ return todayPts(idx) + chartGoldToday(idx) + chartSilverToday(idx); }
+function kidStarsWeek(idx){ return weekPts(idx) + chartGoldWeek(idx) + chartSilverWeek(idx); }
+
+function renderLeaderboard(){
+  // grand totals across all kids
+  let goldT=0,silverT=0,bonusT=0, goldW=0,silverW=0,bonusW=0;
+  KIDS.forEach((k,i)=>{
+    goldT+=chartGoldToday(i); silverT+=chartSilverToday(i); bonusT+=todayPts(i);
+    goldW+=chartGoldWeek(i);  silverW+=chartSilverWeek(i);  bonusW+=weekPts(i);
+  });
+  const tToday=goldT+silverT+bonusT;
+  const tWeek =goldW+silverW+bonusW;
+
+  const dayLeader  = KIDS.map((k,i)=>({k,p:kidStarsToday(i)})).sort((a,b)=>b.p-a.p)[0];
+  const weekLeader = KIDS.map((k,i)=>({k,p:kidStarsWeek(i)})).sort((a,b)=>b.p-a.p)[0];
+
+  // ── top dashboard summary ──
+  document.getElementById('dashSummary').innerHTML = `
+    <div class="ds-card day">
+      <div class="ds-label">Today</div>
+      <div class="ds-num">${tToday}</div>
+      <div class="ds-unit">stars</div>
+      <div class="ds-break">🥇 ${goldT} &nbsp; 🥈 ${silverT} &nbsp; ➕ ${bonusT}</div>
+      <div class="ds-leader">${tToday>0?'⭐ '+dayLeader.k.name+' in front':'No stars yet today'}</div>
+    </div>
+    <div class="ds-card week">
+      <div class="ds-label">This Week</div>
+      <div class="ds-num">${tWeek}</div>
+      <div class="ds-unit">stars</div>
+      <div class="ds-break">🥇 ${goldW} &nbsp; 🥈 ${silverW} &nbsp; ➕ ${bonusW}</div>
+      <div class="ds-leader">${tWeek>0?'🏆 '+weekLeader.k.name+' leading':'Fresh week!'}</div>
+    </div>`;
+
+  // ── per-kid leaderboard, sorted by combined weekly stars ──
+  const sorted=KIDS.map((k,i)=>({...k,i,day:kidStarsToday(i),week:kidStarsWeek(i)}))
+                   .sort((a,b)=> b.week-a.week || b.day-a.day);
+  document.getElementById('lbList').innerHTML=sorted.map((k,rank)=>`
+    <div class="lb-card" style="--kc:${k.color}">
+      <div class="lb-medal">${MEDALS[rank]||'⭐'}</div>
+      <div class="lb-info">
+        <div class="lb-name">${k.emoji} ${k.name}</div>
+        <div class="lb-age">${k.age} years old</div>
+      </div>
+      <div class="lb-stats">
+        <div class="lb-stat day"><div class="v" id="dv-${k.i}">${k.day}</div><div class="l">Today</div></div>
+        <div class="lb-stat week"><div class="v" id="wv-${k.i}">${k.week}</div><div class="l">Week</div></div>
+      </div>
+      <button class="plus-btn" onclick="openBonus(${k.i})" title="Add bonus stars">+</button>
+    </div>`).join('');
+}
+
+// ── bonus stars chooser ──
+let bonusKid=-1;
+function openBonus(idx){
+  bonusKid=idx;
+  document.getElementById('bonusTitle').textContent=`${KIDS[idx].emoji} ${KIDS[idx].name}`;
+  document.getElementById('bonusSub').textContent='How many bonus stars to add?';
+  document.getElementById('bonusOverlay').classList.add('show');
+}
+function chooseBonus(n){ const idx=bonusKid; closeBonus(); if(idx>=0) addBonus(idx,n); }
+function closeBonus(){ document.getElementById('bonusOverlay').classList.remove('show'); bonusKid=-1; }
+
+function addBonus(idx,amount){
+  bonusLog.push({k:idx, ts:Date.now(), n:amount});
+  saveBonus();
+  renderLeaderboard();
+  const dv=document.getElementById('dv-'+idx);
+  if(dv){ dv.classList.add('bump'); setTimeout(()=>dv.classList.remove('bump'),360); }
+  speak(`${amount} bonus star${amount>1?'s':''} for ${KIDS[idx].name}! Great job!`);
+  showToast(`🌟 +${amount} bonus for ${KIDS[idx].name}!`);
+}
+
+function resetPoints(){
+  if(!confirm('Reset all bonus stars to zero? (Chart stars are not affected.)')) return;
+  bonusLog=[]; saveBonus(); renderLeaderboard();
+  showToast('Bonus stars reset!');
+}
+
+// ═══════════════════════════════════════
+//  TIMERS
+// ═══════════════════════════════════════
+function renderTimers(){
+  document.getElementById('timersContainer').innerHTML=KIDS.map((kid,i)=>`
+    <div class="kid-block">
+      <div class="kid-block-header">
+        <div class="kid-block-avatar" style="--kc:${kid.color};border-color:${kid.color}">${kid.emoji}</div>
+        <div class="kid-block-name" style="color:${kid.color}">${kid.name}</div>
+      </div>
+      <div class="timers-row">
+        <div class="timer-box meal" id="meal-box-${i}">
+          <span class="timer-icon">🍽️</span>
+          <div class="timer-type">Meal · 25 min</div>
+          <div class="timer-digits" id="meal-dig-${i}">25:00</div>
+          <div class="timer-controls">
+            <button class="tc-btn tc-start" id="meal-stbtn-${i}" onclick="toggleTimer(${i},'meal')">▶ Start</button>
+            <button class="tc-btn tc-reset" id="meal-rsbtn-${i}" onclick="resetTimerDo(${i},'meal')">↺</button>
+          </div>
+        </div>
+        <div class="timer-box tv" id="tv-box-${i}">
+          <span class="timer-icon">📺</span>
+          <div class="timer-type">TV · 20 min</div>
+          <div class="timer-digits" id="tv-dig-${i}">20:00</div>
+          <div class="timer-controls">
+            <button class="tc-btn tc-start" id="tv-stbtn-${i}" onclick="toggleTimer(${i},'tv')">▶ Start</button>
+            <button class="tc-btn tc-reset" id="tv-rsbtn-${i}" onclick="resetTimerDo(${i},'tv')">↺</button>
+          </div>
+        </div>
+      </div>
+      ${i<KIDS.length-1?'<div class="divider"></div>':''}
+    </div>`).join('');
+}
+
+function toggleTimer(ki,type){
+  const t=timers[ki][type];
+  if(t.running){ pauseTimer(ki,type); }
+  else{ if(t.secs<=0) resetTimerDo(ki,type); startTimer(ki,type); }
+}
+
+function startTimer(ki,type){
+  const t=timers[ki][type]; t.running=true;
+  document.getElementById(`${type}-box-${ki}`).classList.add('running');
+  document.getElementById(`${type}-stbtn-${ki}`).textContent='⏸ Pause';
+  updateDig(ki,type);
+  t.interval=setInterval(()=>{
+    t.secs--;
+    updateDig(ki,type);
+    onTick(ki,type,t.secs);
+    if(t.secs<=0){
+      clearInterval(t.interval); t.running=false;
+      document.getElementById(`${type}-box-${ki}`).classList.remove('running');
+      document.getElementById(`${type}-dig-${ki}`).classList.add('expired');
+      document.getElementById(`${type}-stbtn-${ki}`).textContent='▶ Start';
+    }
+  },1000);
+}
+
+function pauseTimer(ki,type){
+  const t=timers[ki][type]; clearInterval(t.interval); t.running=false;
+  document.getElementById(`${type}-box-${ki}`).classList.remove('running');
+  document.getElementById(`${type}-stbtn-${ki}`).textContent='▶ Resume';
+}
+
+function resetTimerDo(ki,type){
+  const t=timers[ki][type]; clearInterval(t.interval); t.running=false;
+  t.secs=type==='meal'?MEAL_SECS:TV_SECS;
+  document.getElementById(`${type}-box-${ki}`).classList.remove('running');
+  document.getElementById(`${type}-dig-${ki}`).classList.remove('expired');
+  document.getElementById(`${type}-stbtn-${ki}`).textContent='▶ Start';
+  updateDig(ki,type);
+  showToast(`${KIDS[ki].name}'s ${type} timer reset`);
+}
+
+function updateDig(ki,type){
+  const s=timers[ki][type].secs, m=Math.floor(s/60), sec=s%60;
+  document.getElementById(`${type}-dig-${ki}`).textContent=
+    `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function onTick(ki,type,secs){
+  const name=KIDS[ki].name;
+  if(type==='meal'){
+    const mins=Math.floor(secs/60), rem=secs%60;
+    if(secs>300){ if(rem===0&&mins>0&&mins%5===0) speak(`${name}, ${mins} minutes left to finish your food.`); }
+    else if(secs>0){ if(rem===0&&mins>0) speak(`${name}, ${mins} minute${mins>1?'s':''} left to finish your food.`); if(secs===30) speak(`${name}, 30 seconds left!`); }
+    else speak(`Time is up for ${name}, meal time is finished!`);
+  } else {
+    if(secs===600) speak(`${name}, 10 minutes of TV time left.`);
+    if(secs===0)   speak(`Time is up for ${name}! Please turn off the TV or pass the remote.`);
+  }
+}
+
+// ═══════════════════════════════════════
+//  ALARMS
+// ═══════════════════════════════════════
+function renderAlarms(){
+  document.getElementById('alarmList').innerHTML=KIDS.map((kid,i)=>`
+    <div class="alarm-card">
+      <div class="alarm-top">
+        <div class="alarm-avatar" style="--kc:${kid.color};border-color:${kid.color}">${kid.emoji}</div>
+        <div class="alarm-name" style="color:${kid.color}">${kid.name}</div>
+        <div class="alarm-status-dot ${alarms[i].on?'on':''}" id="adot-${i}"></div>
+      </div>
+      <div class="alarm-time-row">
+        <input type="time" class="alarm-time-input" id="atime-${i}"
+          value="${alarms[i].time}"
+          onchange="saveAlarmTime(${i},this.value)">
+        <button class="alarm-toggle ${alarms[i].on?'on':''}" id="atog-${i}"
+          onclick="toggleAlarm(${i})"></button>
+      </div>
+      <div class="alarm-label" id="alabel-${i}">${alarms[i].on?'Alarm ON ✓':'Alarm OFF'}</div>
+    </div>`).join('');
+}
+
+function saveAlarmTime(idx,val){
+  alarms[idx].time=val; saveAlarms(alarms);
+  showToast(`${KIDS[idx].name}'s alarm set to ${val}`);
+}
+
+function toggleAlarm(idx){
+  alarms[idx].on=!alarms[idx].on; saveAlarms(alarms);
+  document.getElementById(`atog-${idx}`).classList.toggle('on',alarms[idx].on);
+  document.getElementById(`adot-${idx}`).classList.toggle('on',alarms[idx].on);
+  document.getElementById(`alabel-${idx}`).textContent=alarms[idx].on?'Alarm ON ✓':'Alarm OFF';
+  showToast(alarms[idx].on?`⏰ ${KIDS[idx].name}'s alarm is on!`:`${KIDS[idx].name}'s alarm off`);
+}
+
+function checkAlarms(){
+  const now=new Date();
+  const hhmm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const sec=now.getSeconds();
+  if(sec!==0) return; // only trigger at :00
+  alarms.forEach((a,i)=>{
+    if(a.on && a.time===hhmm && ringingKidIdx===-1){
+      ringAlarm(i);
+    }
+  });
+}
+
+function ringAlarm(idx){
+  ringingKidIdx=idx;
+  const kid=KIDS[idx];
+  document.getElementById('ringEmoji').textContent=kid.emoji;
+  document.getElementById('ringName').textContent=`Wake up, ${kid.name}! 🌅`;
+  document.getElementById('ringOverlay').classList.add('show');
+  startRingSound();
+  // speech after short delay so audio context is warm
+  setTimeout(()=>{
+    speak(`Wake up ${kid.name}! Good morning! Time to start your wonderful day!`);
+  },600);
+}
+
+function dismissAlarm(){
+  stopRingSound();
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+  document.getElementById('ringOverlay').classList.remove('show');
+  if(ringingKidIdx>=0){
+    // turn alarm off after firing so it doesn't re-ring next minute
+    alarms[ringingKidIdx].on=false;
+    saveAlarms(alarms);
+    renderAlarms();
+    ringingKidIdx=-1;
+  }
+}
+
+// ═══════════════════════════════════════
+//  RING SOUND (Web Audio beeping)
+// ═══════════════════════════════════════
+function startRingSound(){
+  try{
+    ringAudioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    playRingPattern();
+  }catch(e){}
+}
+
+function playRingPattern(){
+  if(!ringAudioCtx||ringAudioCtx.state==='closed') return;
+  const beepSeq=[880,0,880,0,660,0,0,0]; // freq 0 = silence
+  let t=ringAudioCtx.currentTime;
+  ringNodes=[];
+  beepSeq.forEach(freq=>{
+    if(freq>0){
+      const osc=ringAudioCtx.createOscillator();
+      const gain=ringAudioCtx.createGain();
+      osc.type='sine'; osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0.4,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.18);
+      osc.connect(gain); gain.connect(ringAudioCtx.destination);
+      osc.start(t); osc.stop(t+0.2);
+      ringNodes.push(osc);
+    }
+    t+=0.22;
+  });
+  // repeat
+  ringNodes._tmr=setTimeout(()=>{
+    if(ringingKidIdx>=0) playRingPattern();
+  }, beepSeq.length*220+300);
+}
+
+function stopRingSound(){
+  if(ringNodes._tmr) clearTimeout(ringNodes._tmr);
+  ringNodes.forEach(n=>{ try{n.stop();}catch(e){} });
+  ringNodes=[];
+  if(ringAudioCtx){ try{ringAudioCtx.close();}catch(e){} ringAudioCtx=null; }
+}
+
+// ═══════════════════════════════════════
+//  STORIES — sentence-chunked for Android
+// ═══════════════════════════════════════
+function setSpeed(val,btn){
+  storySpeed=val;
+  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(activeStoryId){ stopStory(); } // restart will use new speed
+  showToast(`Story speed: ${val===0.75?'Slow':val===0.9?'Normal':'Fast'}`);
+}
+
+function renderStories(){
+  document.getElementById('storiesList').innerHTML=STORIES.map(s=>`
+    <div class="story-card" id="sc-${s.id}">
+      <div class="story-top">
+        <div class="story-emoji">${s.emoji}</div>
+        <div class="story-meta">
+          <div class="story-title">${s.title}</div>
+          <div class="story-desc">${s.desc}</div>
+        </div>
+        <button class="story-ctrl" id="sb-${s.id}" onclick="toggleStory('${s.id}')">▶</button>
+      </div>
+      <div class="story-progress-bar"><div class="story-progress-fill" id="sp-${s.id}"></div></div>
+    </div>`).join('');
+}
+
+function toggleStory(id){
+  if(activeStoryId===id){ stopStory(); return; }
+  stopStory(); playStory(id);
+}
+
+function playStory(id){
+  if(!window.speechSynthesis){ showToast('Speech not supported'); return; }
+  const story=STORIES.find(s=>s.id===id); if(!story) return;
+  activeStoryId=id; storySentIdx=0; storyQueue=story.sentences;
+  document.getElementById('sc-'+id).classList.add('playing');
+  document.getElementById('sb-'+id).textContent='⏸';
+  document.getElementById('nowPlayingBanner').style.display='flex';
+  document.getElementById('nowPlayingText').textContent='📖 '+story.title;
+  // reset progress bar
+  const fill=document.getElementById('sp-'+id);
+  fill.style.transition='none'; fill.style.width='0%';
+  window.speechSynthesis.cancel();
+  speakNextSentence();
+}
+
+function speakNextSentence(){
+  if(!activeStoryId || storySentIdx>=storyQueue.length){ storyFinished(); return; }
+  const total=storyQueue.length;
+  const pct=Math.round((storySentIdx/total)*100);
+  const fill=document.getElementById('sp-'+activeStoryId);
+  if(fill){ fill.style.transition='width 0.4s ease'; fill.style.width=pct+'%'; }
+
+  const text=storyQueue[storySentIdx];
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-GB';           // en-GB sounds better on Android Chrome
+  u.rate=storySpeed;
+  u.pitch=1.0;
+  u.volume=1.0;
+
+  // Voice selection — prioritise good Android TTS voices
+  const voices=window.speechSynthesis.getVoices();
+  const pref=
+    voices.find(v=>v.lang==='en-GB'&&/google/i.test(v.name))||
+    voices.find(v=>v.lang==='en-US'&&/google/i.test(v.name))||
+    voices.find(v=>/google/i.test(v.name)&&v.lang.startsWith('en'))||
+    voices.find(v=>v.lang==='en-GB')||
+    voices.find(v=>v.lang.startsWith('en'));
+  if(pref) u.voice=pref;
+
+  u.onend=()=>{
+    storySentIdx++;
+    // small pause between sentences feels more natural
+    setTimeout(speakNextSentence, 180);
+  };
+  u.onerror=()=>{
+    storySentIdx++;
+    setTimeout(speakNextSentence, 100);
+  };
+  window.speechSynthesis.speak(u);
+}
+
+function storyFinished(){
+  const id=activeStoryId;
+  if(!id) return;
+  const fill=document.getElementById('sp-'+id);
+  if(fill){ fill.style.transition='width 0.4s ease'; fill.style.width='100%'; }
+  setTimeout(stopStory, 800);
+}
+
+function stopStory(){
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+  storyQueue=[]; storySentIdx=0;
+  if(activeStoryId){
+    document.getElementById('sc-'+activeStoryId)?.classList.remove('playing');
+    const btn=document.getElementById('sb-'+activeStoryId); if(btn) btn.textContent='▶';
+    const fill=document.getElementById('sp-'+activeStoryId);
+    if(fill){ fill.style.transition='none'; fill.style.width='0%'; }
+    activeStoryId=null;
+  }
+  document.getElementById('nowPlayingBanner').style.display='none';
+}
+
+// ═══════════════════════════════════════
+//  SPEECH (short announcements)
+// ═══════════════════════════════════════
+function speak(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US'; u.rate=0.95; u.pitch=1.1; u.volume=1;
+  const voices=window.speechSynthesis.getVoices();
+  const pref=voices.find(v=>v.lang==='en-US'&&/google/i.test(v.name))||
+             voices.find(v=>v.lang.startsWith('en'));
+  if(pref) u.voice=pref;
+  window.speechSynthesis.speak(u);
+}
+// warm up voices list
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+  window.speechSynthesis.getVoices();
+}
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+let toastTmr;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ═══════════════════════════════════════
+//  BEHAVIOR CHART
+// ═══════════════════════════════════════
+const BEHAVIORS = [
+  'Brush your teeth',
+  'Get ready for school',
+  'Have breakfast',
+  'Have lunch',
+  'Do homework',
+  'Study',
+  'No fighting with each other',
+  'Have snacks',
+  'Play together',
+  'Have dinner',
+  'Cleanup',
+  'Watch TV / Play',
+  'Go to sleep by 9 PM',
+  'Listening to instructions',
+  'Share things with each other',
+];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+// cycle order: none → gold → silver → none
+const STAR_CYCLE = ['', 'gold', 'silver'];
+const STAR_ICON  = { '':'—', gold:'🥇', silver:'🥈' };
+
+// Identify this week with a Sunday-anchored key so chart auto-resets weekly
+function weekKey(){
+  const d=new Date();
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate()-d.getDay()); // back to Sunday
+  return d.toISOString().slice(0,10);
+}
+
+function loadChart(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('kq_chart')||'null');
+    if(saved && saved.week===weekKey() && Array.isArray(saved.data) && saved.data.length===KIDS.length) return saved.data;
+  }catch{}
+  // fresh empty chart: [kid][behavior][day] = ''
+  return KIDS.map(()=>BEHAVIORS.map(()=>DAYS.map(()=>'')));
+}
+function saveChart(){
+  localStorage.setItem('kq_chart', JSON.stringify({ week:weekKey(), data:chart }));
+}
+let chart = [];
+let chartKid = 0;
+
+function renderChartKidTabs(){
+  document.getElementById('chartKidTabs').innerHTML = KIDS.map((k,i)=>`
+    <button class="ck-tab ${i===chartKid?'active':''}"
+      style="${i===chartKid?`border-color:${k.color};color:${k.color}`:''}"
+      onclick="selectChartKid(${i})">${k.emoji} ${k.name}</button>`).join('');
+}
+
+function selectChartKid(i){ chartKid=i; renderChartKidTabs(); renderChart(); }
+
+function renderChart(){
+  const todayCol = new Date().getDay(); // 0=Sun
+  let html = '<div class="cg-cell cg-corner">Activity</div>';
+  // day header row
+  DAYS.forEach((d,di)=>{
+    html += `<div class="cg-cell cg-dayhead ${di===todayCol?'today':''}">${d}</div>`;
+  });
+  // behavior rows
+  BEHAVIORS.forEach((b,bi)=>{
+    const alt = bi%2===1;
+    html += `<div class="cg-cell cg-rowhead ${alt?'alt':''}">${b}</div>`;
+    DAYS.forEach((d,di)=>{
+      const val = chart[chartKid][bi][di];
+      const ic  = STAR_ICON[val];
+      const dashCls = val==='' ? 'cg-dash' : '';
+      html += `<div class="cg-cell cg-star ${alt?'alt':''} ${di===todayCol?'today-col':''} ${dashCls}"
+        onclick="cycleStar(${bi},${di})">${ic}</div>`;
+    });
+  });
+  document.getElementById('chartGrid').innerHTML = html;
+  renderChartTotals();
+}
+
+function cycleStar(bi,di){
+  const cur = chart[chartKid][bi][di];
+  const idx = STAR_CYCLE.indexOf(cur);
+  const next = STAR_CYCLE[(idx+1)%STAR_CYCLE.length];
+  chart[chartKid][bi][di] = next;
+  saveChart();
+  renderChart();
+  renderLeaderboard(); // keep home dashboard star totals in sync
+  if(next==='gold'){ speak(`Gold star for ${KIDS[chartKid].name}!`); }
+}
+
+function renderChartTotals(){
+  let gold=0, silver=0;
+  chart[chartKid].forEach(row=>row.forEach(v=>{ if(v==='gold')gold++; else if(v==='silver')silver++; }));
+  document.getElementById('chartTotals').innerHTML = `
+    <div class="ct-pill">🥇 <span class="ct-big">${gold}</span> gold</div>
+    <div class="ct-pill">🥈 <span class="ct-big" style="color:var(--silver)">${silver}</span> silver</div>
+    <div class="ct-pill">⭐ <span class="ct-big" style="color:var(--green)">${gold+silver}</span> stars</div>`;
+}
+
+function resetChart(){
+  if(!confirm(`Clear ${KIDS[chartKid].name}'s chart for this week?`)) return;
+  chart[chartKid] = BEHAVIORS.map(()=>DAYS.map(()=>''));
+  saveChart();
+  renderChart();
+  renderLeaderboard(); // sync home dashboard
+  showToast(`${KIDS[chartKid].name}'s chart cleared`);
+}
+
+// ═══════════════════════════════════════
+//  PARENT LOCK (PIN)
+// ═══════════════════════════════════════
+let pinEntry = '';
+let pinMode = 'unlock';     // 'unlock' | 'setup' | 'confirm'
+let pinFirstEntry = '';     // holds first PIN during setup
+
+// Lightweight obfuscation (not real crypto — just keeps it out of plain sight)
+function hashPin(p){
+  let h=0;
+  for(let i=0;i<p.length;i++){ h=((h<<5)-h)+p.charCodeAt(i); h|=0; }
+  return 'h'+h;
+}
+function getStoredPin(){ return localStorage.getItem('kq_pin'); }
+function setStoredPin(p){ localStorage.setItem('kq_pin', hashPin(p)); }
+
+function showLock(){
+  pinEntry=''; pinFirstEntry='';
+  const stored=getStoredPin();
+  if(stored){
+    pinMode='unlock';
+    setLockText('🔒','Parent Lock','Enter your PIN to unlock');
+    document.getElementById('pinForgot').style.display='block';
+  } else {
+    pinMode='setup';
+    setLockText('🆕','Create a PIN','Set a 4-digit PIN for parent access');
+    document.getElementById('pinForgot').style.display='none';
+  }
+  updatePinDots();
+  document.getElementById('lockScreen').classList.add('show');
+}
+
+function hideLock(){
+  document.getElementById('lockScreen').classList.remove('show');
+}
+
+function setLockText(icon,title,sub,isErr){
+  document.getElementById('lockIcon').textContent=icon;
+  document.getElementById('lockTitle').textContent=title;
+  const s=document.getElementById('lockSub');
+  s.textContent=sub;
+  s.classList.toggle('err', !!isErr);
+}
+
+function updatePinDots(){
+  document.querySelectorAll('.pin-dot').forEach((d,i)=>{
+    d.classList.toggle('filled', i<pinEntry.length);
+  });
+}
+
+function pinPress(n){
+  if(pinEntry.length>=4) return;
+  pinEntry+=n;
+  updatePinDots();
+  if(pinEntry.length===4){ setTimeout(handlePinComplete,180); }
+}
+
+function pinDelete(){
+  pinEntry=pinEntry.slice(0,-1);
+  updatePinDots();
+}
+
+function handlePinComplete(){
+  if(pinMode==='unlock'){
+    if(hashPin(pinEntry)===getStoredPin()){
+      unlockSuccess();
+    } else {
+      pinError('Wrong PIN, try again');
+    }
+  } else if(pinMode==='setup'){
+    pinFirstEntry=pinEntry;
+    pinEntry='';
+    pinMode='confirm';
+    setLockText('🔁','Confirm PIN','Enter the same PIN again');
+    updatePinDots();
+  } else if(pinMode==='confirm'){
+    if(pinEntry===pinFirstEntry){
+      setStoredPin(pinEntry);
+      showToast('🔐 Parent PIN created!');
+      unlockSuccess();
+    } else {
+      pinMode='setup'; pinFirstEntry='';
+      pinError("PINs didn't match, start over");
+    }
+  }
+}
+
+function unlockSuccess(){
+  pinEntry='';
+  updatePinDots();
+  hideLock();
+}
+
+function pinError(msg){
+  setLockText(document.getElementById('lockIcon').textContent, document.getElementById('lockTitle').textContent, msg, true);
+  const icon=document.getElementById('lockIcon');
+  icon.classList.add('shake');
+  setTimeout(()=>icon.classList.remove('shake'),400);
+  pinEntry='';
+  updatePinDots();
+}
+
+function lockApp(){
+  if(!getStoredPin()){
+    // no PIN yet — go through setup
+    showLock();
+    return;
+  }
+  showLock();
+}
+
+function forgotPin(){
+  if(confirm('Reset your PIN? This will clear the saved PIN so you can create a new one. Your kids\u2019 stars and charts stay safe.')){
+    localStorage.removeItem('kq_pin');
+    showToast('PIN cleared — create a new one');
+    showLock();
+  }
+}
+
+// ═══════════════════════════════════════
+//  FAMILY SETUP  (splash → onboarding → app)
+// ═══════════════════════════════════════
+function initFamily(savedKids){
+  KIDS = enrichKids(savedKids);
+  timers = KIDS.map(()=>({
+    meal:{ secs:MEAL_SECS, running:false, interval:null },
+    tv:  { secs:TV_SECS,   running:false, interval:null },
+  }));
+  alarms = loadAlarms();
+  chart  = loadChart();
+  chartKid = 0;
+  renderKidsStrip();
+  renderLeaderboard();
+  renderChartKidTabs();
+  renderChart();
+  renderTimers();
+  renderAlarms();
+  renderStories();
+}
+
+// ── splash ──
+function showSplash(){ document.getElementById('splash').classList.add('show'); }
+function hideSplash(){ document.getElementById('splash').classList.remove('show'); }
+
+// ── onboarding ──
+let onbCount = 3;
+function showOnboarding(){
+  onbCount = 3;
+  document.getElementById('obCount').textContent = onbCount;
+  goOnbStep(1);
+  document.getElementById('onboarding').classList.add('show');
+}
+function hideOnboarding(){ document.getElementById('onboarding').classList.remove('show'); }
+function goOnbStep(n){
+  document.getElementById('obStep1').style.display = n===1?'block':'none';
+  document.getElementById('obStep2').style.display = n===2?'block':'none';
+}
+function obChangeCount(delta){
+  onbCount = Math.max(1, Math.min(10, onbCount+delta));
+  document.getElementById('obCount').textContent = onbCount;
+}
+function obNext(){
+  // build name+age inputs
+  const wrap=document.getElementById('obKidInputs');
+  wrap.innerHTML='';
+  for(let i=0;i<onbCount;i++){
+    const emoji=EMOJI_POOL[i%EMOJI_POOL.length];
+    wrap.innerHTML += `
+      <div class="ob-kid-row">
+        <div class="ob-kid-emoji">${emoji}</div>
+        <input class="ob-input ob-name" type="text" placeholder="Kid ${i+1}'s name" maxlength="20" autocomplete="off">
+        <input class="ob-input ob-age" type="number" placeholder="Age" min="1" max="17" inputmode="numeric">
+      </div>`;
+  }
+  goOnbStep(2);
+}
+function obStart(){
+  const names=[...document.querySelectorAll('.ob-name')];
+  const ages =[...document.querySelectorAll('.ob-age')];
+  const list=[];
+  for(let i=0;i<names.length;i++){
+    const nm=names[i].value.trim();
+    if(!nm){ showToast('Please enter a name for every kid'); names[i].focus(); return; }
+    let age=parseInt(ages[i].value,10);
+    if(isNaN(age)||age<1) age=5;
+    if(age>17) age=17;
+    list.push({ name:nm, age:age });
+  }
+  saveKids(list);
+  // fresh per-family state
+  localStorage.removeItem('kq_alarms');
+  localStorage.removeItem('kq_chart');
+  hideOnboarding();
+  initFamily(list);
+  showToast('🎉 Family saved! Set a parent PIN next.');
+  showLock(); // first launch → PIN setup
+}
+
+// ═══════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════
+function boot(){
+  renderStories(); // stories don't depend on kids
+  showSplash();
+  setTimeout(()=>{
+    hideSplash();
+    const kids=loadKids();
+    if(kids){
+      initFamily(kids);
+      showLock();           // returning family → PIN unlock
+    } else {
+      showOnboarding();     // brand-new family → setup
+    }
+  }, 1900);
+}
+
+// alarm tick — check every second (safe even before family is set)
+alarmCheckInterval=setInterval(checkAlarms,1000);
+
+boot();
+</script>
+</body>
+</html>
