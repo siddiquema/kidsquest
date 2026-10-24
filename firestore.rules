@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Only the family's KidQuest logins can read or write the family's data.
+// Paste this into Firebase console → Firestore Database → Rules → Publish.
+// To add or replace a login, put its User UID (Authentication → Users) in the list.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isFamily() {
+      return request.auth != null
+          && request.auth.uid in [
+               'QSMPPR1JW7cEKG1tZIz6wIYOHIk2',
+               'VUY1ePiGsHg7SYcQ8ufghji1bBE2'
+             ];
+    }
+    match /families/home/{document=**} {
+      allow read, write: if isFamily();
+    }
+  }
+}
