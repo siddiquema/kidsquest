@@ -382,6 +382,46 @@ body{
 .ek-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);text-align:left;margin:4px 4px 10px;}
 .alarm-device-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:700;}
 .alarm-device{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(251,146,60,.25);border-radius:var(--r-sm);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;padding:7px 10px;color-scheme:dark;}
+/* ── SKILLS ── */
+.sk-list{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;}
+.sk-card{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);border-left:4px solid var(--kc,var(--muted));}
+.sk-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sk-name{font-family:'Fredoka One',cursive;font-size:19px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sk-week{font-size:13px;font-weight:700;color:var(--gold);text-align:right;line-height:1.3;}
+.sk-week span{font-size:11px;color:var(--muted);}
+.sk-edit{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);cursor:pointer;font-size:16px;flex-shrink:0;}
+.sk-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid rgba(255,255,255,.06);}
+.sk-row.is-done .sk-title,.sk-row.is-done .sk-instr{opacity:.55;}
+.sk-emoji{font-size:30px;width:40px;text-align:center;flex-shrink:0;}
+.sk-body{flex:1;min-width:0;}
+.sk-title{font-family:'Fredoka One',cursive;font-size:17px;line-height:1.3;}
+.sk-badge{display:inline-block;font-family:'Quicksand',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--story);background:rgba(56,189,248,.12);border-radius:10px;padding:2px 8px;margin-left:4px;vertical-align:middle;}
+.sk-instr{font-size:13px;color:var(--muted);line-height:1.4;margin-top:3px;}
+.sk-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.sk-done{min-width:84px;padding:12px 14px;border:none;border-radius:22px;background:linear-gradient(135deg,var(--green),#05b38a);color:#06281f;font-family:'Fredoka One',cursive;font-size:16px;cursor:pointer;}
+.sk-done.ok{background:rgba(6,214,160,.15);color:var(--green);}
+.sk-done:active{transform:scale(.94);}
+.sk-wait{font-size:12px;font-weight:700;color:var(--gold);}
+.sk-x{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 6px;}
+.sk-timer{font-family:'Fredoka One',cursive;font-size:14px;}
+.sk-empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);padding:6px 4px;}
+.sk-older{margin-top:8px;}
+.sk-older-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:8px 4px 0;}
+.pe-inner{max-width:520px;text-align:left;}
+.pe-inner .onb-emoji,.pe-inner .onb-title,.pe-inner .onb-sub{text-align:center;}
+.pe-days{padding:0;margin-bottom:14px;}
+.pe-count{font-size:10px;opacity:.7;margin-left:2px;}
+.pe-act{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-sm);padding:10px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;}
+.pe-line{display:flex;gap:8px;align-items:center;}
+.pe-emoji{width:58px;text-align:center;flex-shrink:0;}
+.pe-title{flex:1;min-width:0;}
+.pe-min{width:84px;flex-shrink:0;}
+.pe-mode{flex:1;min-width:0;color-scheme:dark;}
+.pe-instr{width:100%;resize:vertical;font-size:14px;}
+.pe-topic{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:700;}
+.pe-tpl{margin-bottom:18px;}
+.pe-tpl select{flex:1;min-width:0;color-scheme:dark;}
+body:not(.role-kid) .kid-only{display:none!important;}
 /* kids get their own screen: no giving stars, editing or alarms */
 .role-kid .parent-only{display:none!important;}
 .role-kid .cg-star{cursor:default;}
@@ -441,6 +481,7 @@ body{
   .kid-block{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);}
   .kid-block .divider{display:none;}
   #timersContainer{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .sk-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
 
   .chart-grid{grid-template-columns:160px repeat(7,1fr);min-width:0;}
 }
@@ -551,6 +592,31 @@ body{
   </div>
 </div>
 
+<!-- ═══════ SKILLS PLAN EDITOR ═══════ -->
+<div class="onboarding" id="planEditor">
+  <div class="onb-inner pe-inner">
+    <div class="onb-emoji">🌱</div>
+    <div class="onb-title" id="peTitle">Plan</div>
+    <div class="onb-sub">Pick a day, then change, add or remove activities. Leave minutes empty for activities without a timer.</div>
+    <div class="chart-kid-tabs pe-days" id="peDays"></div>
+    <div id="peActs"></div>
+    <button class="onb-add" onclick="edAdd()">＋ Add activity</button>
+    <div class="ek-section">This week's topics</div>
+    <div class="ob-kid-list">
+      <label class="pe-topic">Letters of the week<input class="ob-input" id="pe-letterGroup" maxlength="60" placeholder="e.g. a c d g o q"></label>
+      <label class="pe-topic">Hindi grammar topic<input class="ob-input" id="pe-hindiGrammar" maxlength="80" placeholder="e.g. vachan (singular/plural)"></label>
+      <label class="pe-topic">Handwriting check sentence<input class="ob-input" id="pe-benchmarkSentence" maxlength="80" placeholder="Same sentence every Sunday"></label>
+    </div>
+    <div class="ek-section">Start again from a template</div>
+    <div class="pe-line pe-tpl">
+      <select class="ob-input" id="peTemplate"></select>
+      <button class="tc-btn tc-start" onclick="edLoadTemplate()">Load</button>
+    </div>
+    <button class="onb-next" onclick="savePlan()">Save plan</button>
+    <button class="onb-back" onclick="closePlanEditor()">Cancel</button>
+  </div>
+</div>
+
 <!-- ═══════ EDIT KIDS ═══════ -->
 <div class="onboarding" id="editKids">
   <div class="onb-inner">
@@ -658,6 +724,7 @@ body{
 <div class="tabs">
   <button class="tab-btn active"  onclick="switchTab('leaderboard',this)">🏅 Stars</button>
   <button class="tab-btn"         onclick="switchTab('chart',this)">📋 Chart</button>
+  <button class="tab-btn"         onclick="switchTab('skills',this)">🌱 Skills</button>
   <button class="tab-btn"         onclick="switchTab('timers',this)">⏱️ Timers</button>
   <button class="tab-btn parent-only" onclick="switchTab('alarms',this)">⏰ Wake Up</button>
   <button class="tab-btn"         onclick="switchTab('stories',this)">📖 Stories</button>
@@ -691,6 +758,13 @@ body{
   <div class="reset-zone">
     <button class="reset-btn parent-only" onclick="resetChart()">↺ Clear This Week's Chart</button>
   </div>
+</div>
+
+<!-- SKILLS PANEL -->
+<div class="panel" id="panel-skills">
+  <div class="sec-label">Today's skills 🌱<span class="parent-only"> — tap Done or Approve to give a star</span></div>
+  <div class="sk-list" id="skillsList"></div>
+  <div style="height:20px"></div>
 </div>
 
 <!-- TIMERS PANEL -->
@@ -996,6 +1070,7 @@ function devName(id){
 //  SYNCED STATE
 // ═══════════════════════════════════════
 // stars:   { kid, ts, n, src:'bonus'|'skill', by }      one record per award
+// plans, skilllog: see SKILLS below
 // charts:  id `${kid}_${week}` → { kid, week, cells:{ 'behaviour_day':'gold'|'silver'|'' } }
 // timers:  id kid → { meal:{endsAt,remaining,by}, tv:{…} }
 // alarms:  id kid → { time, on, device }
@@ -1034,6 +1109,8 @@ function startWatches(onReady){
   unwatch.push(store.watch('timers', null, m=>{ TIMERS=m;  scheduleRender(); }));
   unwatch.push(store.watch('alarms', null, m=>{ ALARMS=m;  scheduleRender(); }));
   unwatch.push(store.watch('devices',null, m=>{ DEVICES=m; scheduleRender(); }));
+  unwatch.push(store.watch('plans',  null, m=>{ PLANS=m;   scheduleRender(); }));
+  unwatch.push(store.watch('skilllog',{field:'date',min:weekKey(-1)}, m=>{ SKILLLOG=m; scheduleRender(); }));
 }
 function checkWeekRollover(){ if(watchWeek && weekKey()!==watchWeek) startWatches(null); }
 
@@ -1049,6 +1126,7 @@ function renderAll(){
   renderChartKidTabs();
   renderChart();
   renderTimers();
+  renderSkills();
   // don't redraw alarms while someone is picking a time or device
   if(!document.getElementById('alarmList').contains(document.activeElement)) renderAlarms();
 }
@@ -1684,6 +1762,333 @@ function resetChart(){
 }
 
 // ═══════════════════════════════════════
+//  SKILLS  (per-kid weekly plan · today's activities · approval → stars)
+// ═══════════════════════════════════════
+// plans:    id kid → { template, version, updated, days:{sun..sat:[activity]}, daily:[activity], topics:{…} }
+//           activity = { id, emoji, title, minutes|null, mode:''|'together'|'separate', instructions }
+// skilllog: id `${kid}_${date}_${taskId}` → { kid, date, taskId, title, status:'pending'|'approved', ts, by }
+// An approved activity adds 1 star (stars id `skill_${logId}`); every weekday activity
+// approved Mon–Fri adds a +2 bonus for that week (stars id `streak_${kid}_${week}`).
+const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
+const WEEKDAYS = ['mon','tue','wed','thu','fri'];
+const SKILL_STAR = 1, FULL_WEEK_BONUS = 2;
+let PLANS = {}, SKILLLOG = {};
+
+const act = (id,emoji,title,minutes,instructions,mode='') => ({ id, emoji, title, minutes, mode, instructions });
+
+// Starting plans from the two handover briefs. Parents pick one per kid, then edit freely.
+const PLAN_TEMPLATES = {
+  grade3: {
+    label: 'Age 8 · Hindi, Telugu & handwriting (timed)',
+    days: {
+      mon: [ act('hw-journal','✍️','Space Journal',7,'Copy one planet fact neatly in your 4-line notebook.'),
+             act('hi-read','📗','Hindi reading',13,'Read in short bursts. Point with your finger, then tell what happened after each paragraph.') ],
+      tue: [ act('hw-letters','✍️','Letters of the week',7,'Practise this week’s letters: {letterGroup}. Slow and neat.'),
+             act('te-practice','📙','Telugu',13,'Tutor session, or Google Read Along in Telugu.') ],
+      wed: [ act('hw-journal','✍️','Space Journal',7,'Copy one planet fact neatly in your 4-line notebook.'),
+             act('hi-grammar','🎲','Hindi grammar game',13,'Play a game with this week’s topic: {hindiGrammar}.') ],
+      thu: [ act('hw-letters','✍️','Letters of the week',7,'Practise this week’s letters: {letterGroup}. Slow and neat.'),
+             act('te-practice','📙','Telugu',13,'Tutor session, or Google Read Along in Telugu.') ],
+      fri: [ act('hw-fact','🌟','Fact of the week',7,'Write your own “Fact of the week” in your best handwriting.'),
+             act('teach-back','🧑‍🏫','Teach-back',13,'Quiz Mum or Dad on Hindi grammar, then teach them 3 Telugu words.') ],
+      sat: [ act('game-inventor','🎮','Game Inventor',60,'Invent a game from any objects. It must use Hindi or Telugu words (or {hindiGrammar}). Write the rules in your best handwriting, then teach it to the twins.') ],
+      sun: [ act('storybook','📚','Hindi or Telugu storybook',20,'Read a StoryWeaver book (Level 1+) in Hindi or Telugu.'),
+             act('space-project','🪐','Space project',20,'Work on your space project. Label things in English, Hindi and Telugu.'),
+             act('typing','⌨️','TypingClub',15,'Do your next Home Row lesson on TypingClub.'),
+             act('hw-benchmark','📸','Handwriting check',5,'Write “{benchmarkSentence}” in your best handwriting. Ask Mum or Dad to take a photo.') ],
+    },
+    daily: [],
+    topics: { letterGroup:'a c d g o q', hindiGrammar:'ling (gender): ladka khelta hai / ladki khelti hai', benchmarkSentence:'The planets go around the Sun.' },
+  },
+  reader: {
+    label: 'Age 5–6 · confident reader',
+    days: twinDays(act('reading','📖','Reading',null,'Read a short book aloud, then tell the story back.','separate')),
+    daily: [ act('boost','🌙','Reading boost',null,'Read one page at bedtime.','separate'), ownJob() ],
+    topics: {},
+  },
+  early: {
+    label: 'Age 5–6 · early reader',
+    days: twinDays(act('reading','🔤','Reading',null,'Do the current reading-path step. Then tell a plan or story — Mum or Dad writes it, and you read it back.','separate')),
+    daily: [ act('boost','🤖','Reading boost',null,'Robot-talk game with 5 words, plus the current reading step.','separate'), ownJob() ],
+    topics: {},
+  },
+  empty: { label: 'Empty plan', days:{}, daily:[], topics:{} },
+};
+function ownJob(){ return act('own-job','👟','Own job',null,'Shoes to the rack, plate to the sink, tidy up your toys.'); }
+// The twins share every day except Monday's reading, which differs per child
+function twinDays(mondayReading){
+  const T='together';
+  return {
+    mon: [ mondayReading ],
+    tue: [ act('numbers','🔢','Numbers',null,'Chess-piece maths, a dice race, or the shop game with coins.',T) ],
+    wed: [ act('chess','♟️','Thinking & chess',null,'One checkmate-in-1 puzzle, then the “what moved?” memory game.',T) ],
+    thu: [ act('life','🎒','Life & social',null,'Pack your own bag, set the table, a feelings talk, and a handshake after games.',T) ],
+    fri: [ act('art','🎨','Body & creativity',null,'Art club (this week’s step), then 5 minutes of dance or hopscotch.',T) ],
+    sat: [ act('family-chess','♟️','Family chess',20,'Play chess together as a family.',T),
+           act('outdoor','🌳','Outdoor play',30,'Run, climb, ride or play ball outside.',T),
+           act('make','🛠️','Make something',30,'Build or make something together.',T) ],
+    sun: [ act('story-time','📚','Story time',20,'Read stories together.',T),
+           act('real-maths','🛒','Real-world maths',20,'Count, weigh or pay for things at home or at the shop.',T),
+           act('buddy','🤝','Buddy session',20,'Play or read with your big brother.',T) ],
+  };
+}
+
+const TOPIC_FIELDS = [
+  ['letterGroup','Letters of the week','e.g. a c d g o q'],
+  ['hindiGrammar','Hindi grammar topic','e.g. vachan (singular/plural)'],
+  ['benchmarkSentence','Handwriting check sentence','Same sentence every Sunday'],
+];
+
+function todayKey(){ return ymd(new Date()); }
+function planFor(kid){ return PLANS[kid]; }
+function fillTopics(text,topics){ return String(text||'').replace(/\{(\w+)\}/g,(m,k)=>topics?.[k] || '…'); }
+function logId(kid,date,taskId){ return `${kid}_${date}_${taskId}`; }
+function logFor(kid,date,taskId){ return SKILLLOG[logId(kid,date,taskId)]; }
+
+// Today's list: the day's activities, then the every-day ones
+function todaysActivities(kid){
+  const p=planFor(kid); if(!p) return [];
+  const day=(p.days?.[DAY_KEYS[new Date().getDay()]]||[]).map(a=>({...a,daily:false}));
+  const daily=(p.daily||[]).map(a=>({...a,daily:true}));
+  return [...day,...daily];
+}
+
+function skillStarsWeek(kid,offset=0){
+  const from=startOfWeekTs(offset), to=startOfWeekTs(offset+1);
+  let s=0;
+  for(const id in STARS){ const e=STARS[id]; if(e.kid===kid && e.src==='skill' && e.ts>=from && e.ts<to) s+=e.n||1; }
+  return s;
+}
+
+// ── running a timed block (on this device only) ──
+let skillRun=null; // { kid, taskId, title, endsAt, warned }
+
+function startSkillTimer(kid,taskId){
+  const a=todaysActivities(kid).find(x=>x.id===taskId); if(!a?.minutes) return;
+  skillRun={ kid, taskId, title:a.title, endsAt:Date.now()+a.minutes*60000, warned:false };
+  speak(`${a.title} time! ${a.minutes} minutes.`);
+  renderSkills();
+}
+function stopSkillTimer(){ skillRun=null; renderSkills(); }
+
+function skillTick(){
+  if(!skillRun) return;
+  const left=Math.max(0,Math.ceil((skillRun.endsAt-Date.now())/1000));
+  const el=document.getElementById('skrun-'+skillRun.kid+'-'+skillRun.taskId);
+  if(el) el.textContent=mmss(left);
+  if(left<=60 && !skillRun.warned && left>0){ skillRun.warned=true; speak('One minute left.'); }
+  if(left>0) return;
+  const {kid,taskId}=skillRun, name=kidById(kid)?.name||'';
+  skillRun=null;
+  speak(`Time's up, ${name}! Tap Done when you've finished.`);
+  // point to the next timed block that isn't done yet
+  const list=todaysActivities(kid), i=list.findIndex(x=>x.id===taskId);
+  const next=list.slice(i+1).find(x=>x.minutes && !logFor(kid,todayKey(),x.id));
+  if(next) speak(`Next: ${next.title}, ${next.minutes} minutes. Tap start when you're ready.`);
+  renderSkills();
+}
+
+// ── done → approve → stars ──
+function markSkillDone(kid,taskId){
+  const a=todaysActivities(kid).find(x=>x.id===taskId); if(!a) return;
+  const date=todayKey(), id=logId(kid,date,taskId), name=kidById(kid)?.name||'';
+  if(skillRun?.kid===kid && skillRun.taskId===taskId) skillRun=null;
+  if(isParent()){
+    approveLog(id,{ kid, date, taskId, title:a.title });
+  } else {
+    store.put('skilllog',id,{ kid, date, taskId, title:a.title, status:'pending', ts:Date.now(), by:currentWho?.id||null },false);
+    speak(`Great job, ${name}! Ask Mum or Dad to check it.`);
+    showToast('✋ Waiting for Mum or Dad');
+  }
+}
+
+// Parents approve (or tick directly). The star is keyed to the log, so approving twice gives one star.
+function approveLog(id,base){
+  if(!isParent()) return;
+  const e={ ...(SKILLLOG[id]||{}), ...(base||{}) };
+  const name=kidById(e.kid)?.name||'';
+  const ts=dateTs(e.date);
+  store.put('skilllog',id,{ ...e, status:'approved', ts, by:currentWho.id },false);
+  store.put('stars','skill_'+id,{ kid:e.kid, ts, n:SKILL_STAR, src:'skill', task:e.taskId, by:currentWho.id },false);
+  SKILLLOG[id]={ ...e, status:'approved', ts }; // so the week check below sees it straight away
+  checkFullWeek(e.kid,e.date);
+  speak(`Well done ${name}! One more star!`);
+  showToast(`⭐ +1 for ${name}`);
+}
+
+function undoLog(id){
+  const e=SKILLLOG[id]; if(!e) return;
+  if(!isParent()){
+    if(e.status!=='pending' || e.kid!==currentWho?.id) return; // kids can only take back their own unapproved tick
+  } else if(e.status==='approved' && !confirm(`Undo "${e.title}" for ${kidById(e.kid)?.name}? The star is taken back.`)) return;
+  store.remove('skilllog',id);
+  store.remove('stars','skill_'+id);
+  delete SKILLLOG[id];
+  checkFullWeek(e.kid,e.date);
+}
+
+// local midday of a YYYY-MM-DD date, so the star lands on the right day and week
+function dateTs(date){ const [y,m,d]=date.split('-').map(Number); return new Date(y,m-1,d,12).getTime(); }
+
+// +2 bonus when every weekday activity Mon–Fri of that week is approved
+function checkFullWeek(kid,date){
+  const p=planFor(kid); if(!p) return;
+  const day=new Date(dateTs(date)); day.setDate(day.getDate()-day.getDay()); // that week's Sunday
+  const week=ymd(day), sid=`streak_${kid}_${week}`;
+  let any=false, all=true;
+  WEEKDAYS.forEach((k,i)=>{
+    const d=new Date(day); d.setDate(d.getDate()+i+1);
+    (p.days?.[k]||[]).forEach(a=>{ any=true; if(logFor(kid,ymd(d),a.id)?.status!=='approved') all=false; });
+  });
+  if(any && all){
+    if(!STARS[sid]){
+      store.put('stars',sid,{ kid, ts:dateTs(date), n:FULL_WEEK_BONUS, src:'skill', task:'full-week' },false);
+      speak(`Amazing, ${kidById(kid)?.name}! Every weekday done. Two bonus stars!`);
+    }
+  } else if(STARS[sid]) store.remove('stars',sid);
+}
+
+// ── Skills tab ──
+function renderSkills(){
+  const wrap=document.getElementById('skillsList'); if(!wrap) return;
+  const today=todayKey();
+  wrap.innerHTML=visibleKids().map(k=>{
+    const p=planFor(k.id);
+    const week=skillStarsWeek(k.id), last=skillStarsWeek(k.id,-1);
+    const head=`
+      <div class="sk-head">
+        <div class="kid-block-avatar" style="border-color:${k.color}">${k.emoji}</div>
+        <div class="sk-name" style="color:${k.color}">${esc(k.name)}</div>
+        <div class="sk-week">⭐ ${fmtStars(week)} this week<br><span>last week ${fmtStars(last)}</span></div>
+        ${p?`<button class="sk-edit parent-only" onclick="openPlanEditor('${k.id}')" title="Edit plan">✏️</button>`:''}
+      </div>`;
+    if(!p){
+      return `<div class="sk-card" style="--kc:${k.color}">${head}
+        <div class="sk-empty parent-only">
+          <div>Choose a starting plan for ${esc(k.name)}:</div>
+          <select class="alarm-device" id="sktpl-${k.id}">
+            ${Object.entries(PLAN_TEMPLATES).map(([key,t])=>`<option value="${key}">${esc(t.label)}</option>`).join('')}
+          </select>
+          <button class="tc-btn tc-start" onclick="assignPlan('${k.id}')">Use this plan</button>
+        </div>
+        <div class="sk-empty kid-only">No plan yet — ask Mum or Dad.</div>
+      </div>`;
+    }
+    const items=todaysActivities(k.id);
+    const rows=items.map(a=>{
+      const log=logFor(k.id,today,a.id);
+      const running=skillRun?.kid===k.id && skillRun.taskId===a.id;
+      const badge=[a.minutes?`${a.minutes} min`:'', a.mode==='together'?'Together':a.mode==='separate'?'Just me':'', a.daily?'Every day':''].filter(Boolean)
+        .map(b=>`<span class="sk-badge">${b}</span>`).join('');
+      const id=logId(k.id,today,a.id);
+      let action;
+      if(log?.status==='approved')      action=`<button class="sk-done ok" onclick="undoLog('${id}')" title="Tap to undo">✓ Done</button>`;
+      else if(log?.status==='pending')  action=`<span class="sk-wait">✋ Waiting</span>
+        <button class="sk-done parent-only" onclick="approveLog('${id}')">Approve</button>
+        <button class="sk-x" onclick="undoLog('${id}')" title="Not yet">✕</button>`;
+      else action=`${a.minutes ? (running
+          ? `<button class="tc-btn tc-start sk-timer" onclick="stopSkillTimer()">⏹ <span id="skrun-${k.id}-${a.id}">${mmss(Math.max(0,Math.ceil((skillRun.endsAt-Date.now())/1000)))}</span></button>`
+          : `<button class="tc-btn tc-start" onclick="startSkillTimer('${k.id}','${a.id}')">▶ Start</button>`) : ''}
+        <button class="sk-done" onclick="markSkillDone('${k.id}','${a.id}')">Done</button>`;
+      return `
+        <div class="sk-row ${log?.status==='approved'?'is-done':''}">
+          <div class="sk-emoji">${esc(a.emoji)}</div>
+          <div class="sk-body">
+            <div class="sk-title">${esc(a.title)} ${badge}</div>
+            <div class="sk-instr">${esc(fillTopics(a.instructions,p.topics))}</div>
+          </div>
+          <div class="sk-actions">${action}</div>
+        </div>`;
+    }).join('') || '<div class="sk-empty">Nothing planned today — enjoy the day! 🌈</div>';
+    // older ticks still waiting (yesterday etc.) so they don't get lost
+    const older=isParent()?Object.entries(SKILLLOG).filter(([,e])=>e.kid===k.id && e.status==='pending' && e.date!==today):[];
+    const olderHtml=older.length?`<div class="sk-older parent-only"><div class="sk-older-h">Waiting from earlier days</div>${older.map(([id,e])=>`
+        <div class="sk-row"><div class="sk-body"><div class="sk-title">${esc(e.title)} <span class="sk-badge">${esc(e.date)}</span></div></div>
+        <div class="sk-actions"><button class="sk-done" onclick="approveLog('${id}')">Approve</button><button class="sk-x" onclick="undoLog('${id}')">✕</button></div></div>`).join('')}</div>`:'';
+    return `<div class="sk-card" style="--kc:${k.color}">${head}${rows}${olderHtml}</div>`;
+  }).join('');
+}
+
+function copyTemplate(key){
+  const t=PLAN_TEMPLATES[key]||PLAN_TEMPLATES.empty;
+  return JSON.parse(JSON.stringify({ template:key, days:t.days, daily:t.daily, topics:t.topics }));
+}
+function assignPlan(kid){
+  if(!isParent()) return;
+  const key=document.getElementById('sktpl-'+kid).value;
+  store.put('plans',kid,{ ...copyTemplate(key), version:1, updated:Date.now() },false);
+  showToast(`🌱 Plan set for ${kidById(kid)?.name}`);
+}
+
+// ── plan editor (parents) ──
+let edKid=null, edPlan=null, edDay='mon';
+const ED_DAYS=[...DAY_KEYS.slice(1),'sun','daily'];
+const ED_DAY_LABEL={ sun:'Sun', mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', daily:'Every day' };
+
+function openPlanEditor(kid){
+  if(!isParent() || !planFor(kid)) return;
+  edKid=kid; edPlan=JSON.parse(JSON.stringify(planFor(kid)));
+  edPlan.days=edPlan.days||{}; edPlan.daily=edPlan.daily||[]; edPlan.topics=edPlan.topics||{};
+  edDay=DAY_KEYS[new Date().getDay()];
+  document.getElementById('peTitle').textContent=`${kidById(kid)?.emoji} ${kidById(kid)?.name}'s plan`;
+  document.getElementById('peTemplate').innerHTML=Object.entries(PLAN_TEMPLATES).map(([key,t])=>`<option value="${key}">${esc(t.label)}</option>`).join('');
+  renderPlanEditor();
+  document.getElementById('planEditor').classList.add('show');
+}
+function closePlanEditor(){ document.getElementById('planEditor').classList.remove('show'); edKid=null; }
+
+function edList(){ return edDay==='daily' ? edPlan.daily : (edPlan.days[edDay] = edPlan.days[edDay]||[]); }
+
+function renderPlanEditor(){
+  document.getElementById('peDays').innerHTML=ED_DAYS.map(d=>`
+    <button class="ck-tab ${d===edDay?'active':''}" onclick="edDay='${d}';renderPlanEditor()">${ED_DAY_LABEL[d]}
+      <span class="pe-count">${(d==='daily'?edPlan.daily:edPlan.days[d]||[]).length}</span></button>`).join('');
+  const list=edList();
+  const box=document.getElementById('peActs');
+  box.innerHTML=list.map((a,i)=>`
+    <div class="pe-act">
+      <div class="pe-line">
+        <input class="ob-input pe-emoji" maxlength="4" data-f="emoji" data-i="${i}">
+        <input class="ob-input pe-title" maxlength="40" placeholder="Activity" data-f="title" data-i="${i}">
+        <button class="ob-del" onclick="edRemove(${i})" title="Remove">✕</button>
+      </div>
+      <div class="pe-line">
+        <input class="ob-input pe-min" type="number" min="0" max="180" inputmode="numeric" placeholder="min" data-f="minutes" data-i="${i}">
+        <select class="ob-input pe-mode" data-f="mode" data-i="${i}">
+          <option value="">On their own</option><option value="together">Together</option><option value="separate">Just me (differs per kid)</option>
+        </select>
+      </div>
+      <textarea class="ob-input pe-instr" rows="2" placeholder="What to do" data-f="instructions" data-i="${i}"></textarea>
+    </div>`).join('') || '<div class="sk-empty">No activities on this day.</div>';
+  // fill values through the DOM so text never needs escaping
+  box.querySelectorAll('[data-f]').forEach(el=>{
+    const a=list[+el.dataset.i], f=el.dataset.f;
+    el.value = a[f]==null ? '' : a[f];
+    el.oninput=()=>{ a[f] = f==='minutes' ? (el.value===''?null:Math.max(0,parseInt(el.value,10)||0)||null) : el.value; };
+  });
+  TOPIC_FIELDS.forEach(([key])=>{ const el=document.getElementById('pe-'+key); el.value=edPlan.topics[key]||''; el.oninput=()=>{ edPlan.topics[key]=el.value; }; });
+}
+
+function edAdd(){ edList().push(act(newId(),'⭐','',null,'')); renderPlanEditor(); }
+function edRemove(i){ edList().splice(i,1); renderPlanEditor(); }
+function edLoadTemplate(){
+  const key=document.getElementById('peTemplate').value;
+  if(!confirm(`Replace this plan with "${PLAN_TEMPLATES[key].label}"? Your changes to the plan will be lost (done ticks and stars stay).`)) return;
+  edPlan={ ...copyTemplate(key), version:edPlan.version };
+  renderPlanEditor();
+}
+function savePlan(){
+  for(const d of ED_DAYS){
+    const list=d==='daily'?edPlan.daily:(edPlan.days[d]||[]);
+    if(list.some(a=>!String(a.title).trim())){ edDay=d; renderPlanEditor(); showToast(`Give every activity on ${ED_DAY_LABEL[d]} a name`); return; }
+    list.forEach(a=>{ a.title=String(a.title).trim(); a.emoji=String(a.emoji||'⭐').trim()||'⭐'; });
+  }
+  store.put('plans',edKid,{ ...edPlan, version:(edPlan.version||1)+1, updated:Date.now() },false);
+  showToast(`✅ ${kidById(edKid)?.name}'s plan saved`);
+  closePlanEditor();
+}
+
+// ═══════════════════════════════════════
 //  WHO'S HERE  (a PIN for each person; kids get their own screen)
 // ═══════════════════════════════════════
 let currentWho = null;      // { id, type }
@@ -2114,7 +2519,7 @@ async function boot(){
 // timers, alarms and the weekly rollover all run off one clock
 setInterval(()=>{
   if(!store || !KIDS.length) return; // wait until the family has loaded
-  timerTick(); checkAlarms(); checkWeekRollover();
+  timerTick(); skillTick(); checkAlarms(); checkWeekRollover();
 },500);
 
 if('serviceWorker' in navigator && location.protocol!=='file:'){
