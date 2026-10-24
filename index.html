@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0d1b2a">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>KidQuest ✨</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -34,6 +37,7 @@ body{
     radial-gradient(ellipse at 0% 0%,rgba(244,162,97,.12) 0%,transparent 55%),
     radial-gradient(ellipse at 100% 100%,rgba(167,139,250,.12) 0%,transparent 55%);
   padding-bottom:48px;
+  min-height:100vh; /* keep the background glow down to the bottom on short pages */
 }
 
 /* ── HEADER ── */
@@ -78,6 +82,7 @@ body{
 .lb-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
 .lb-card{background:var(--card);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px;border-left:4px solid var(--kc,var(--muted));box-shadow:var(--shadow);}
 .lb-medal{font-size:26px;flex-shrink:0;}
+.lb-card{min-width:0;} /* let grid columns shrink instead of overflowing */
 .lb-info{flex:1;min-width:0;}
 .lb-name{font-family:'Fredoka One',cursive;font-size:18px;line-height:1;color:var(--kc,var(--text));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .lb-age{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -364,7 +369,22 @@ body{
 .ob-del:disabled{opacity:.3;pointer-events:none;}
 .onb-add{width:100%;padding:12px;margin-bottom:14px;border:1.5px dashed rgba(255,255,255,.18);border-radius:var(--r-sm);background:transparent;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 .onb-add:disabled{opacity:.35;pointer-events:none;}
-.header-btns{display:flex;gap:10px;}
+.header-btns{display:flex;gap:10px;align-items:center;}
+.who-chip{height:46px;padding:0 16px;border-radius:23px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);color:var(--text);font-family:'Fredoka One',cursive;font-size:15px;cursor:pointer;white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis;}
+.who-chip:hover{border-color:var(--gold);}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-top:6px;}
+.who-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:var(--r);background:var(--card);border:2px solid var(--kc,rgba(255,255,255,.1));color:var(--text);cursor:pointer;transition:transform .12s;}
+.who-tile:active,.who-tile:focus{transform:scale(.95);outline:none;box-shadow:0 0 0 3px var(--kc);}
+.who-emoji{font-size:40px;}
+.who-name{font-family:'Fredoka One',cursive;font-size:16px;color:var(--kc,var(--text));max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ob-pin{width:74px;flex-shrink:0;text-align:center;}
+.pw-input{width:100%;margin-bottom:12px;}
+.ek-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);text-align:left;margin:4px 4px 10px;}
+.alarm-device-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:700;}
+.alarm-device{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(251,146,60,.25);border-radius:var(--r-sm);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;padding:7px 10px;color-scheme:dark;}
+/* kids get their own screen: no giving stars, editing or alarms */
+.role-kid .parent-only{display:none!important;}
+.role-kid .cg-star{cursor:default;}
 .onb-back{margin-top:14px;background:none;border:none;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 
 /* ═══════════════════════════════════════
@@ -512,10 +532,20 @@ body{
     <div id="obStep2" style="display:none;">
       <div class="onb-emoji">⭐</div>
       <div class="onb-title">Tell us about them</div>
-      <div class="onb-sub">Add each child's name and age. You can change these later.</div>
+      <div class="onb-sub">Add each child's name, age and a 4-digit PIN that opens their own screen. You can change these later.</div>
       <div class="ob-kid-list" id="obKidInputs"></div>
-      <button class="onb-next" onclick="obStart()">Start KidQuest 🚀</button>
+      <button class="onb-next" onclick="obKidsNext()">Next →</button>
       <button class="onb-back" onclick="goOnbStep(1)">← Back</button>
+    </div>
+
+    <!-- Step 3: parents -->
+    <div id="obStep3" style="display:none;">
+      <div class="onb-emoji">🔐</div>
+      <div class="onb-title">Mum &amp; Dad</div>
+      <div class="onb-sub">Each parent gets a PIN that opens the parent screens. Clear the second name if only one of you will use KidQuest.</div>
+      <div class="ob-kid-list" id="obParentInputs"></div>
+      <button class="onb-next" onclick="obFinish()">Start KidQuest 🚀</button>
+      <button class="onb-back" onclick="goOnbStep(2)">← Back</button>
     </div>
 
   </div>
@@ -525,22 +555,53 @@ body{
 <div class="onboarding" id="editKids">
   <div class="onb-inner">
     <div class="onb-emoji">✏️</div>
-    <div class="onb-title">Edit your kids</div>
-    <div class="onb-sub">Change names and ages, add a kid, or remove one. Stars and charts stay with each kid.</div>
+    <div class="onb-title">Edit your family</div>
+    <div class="onb-sub">Change names, ages and PINs, add a kid, or remove someone. Leave a PIN box empty to keep the current PIN.</div>
+    <div class="ek-section">Kids</div>
     <div class="ob-kid-list" id="ekKidInputs"></div>
     <button class="onb-add" id="ekAddBtn" onclick="ekAddRow()">＋ Add a kid</button>
+    <div class="ek-section">Parents</div>
+    <div class="ob-kid-list" id="ekParentInputs"></div>
+    <div class="ek-section">This device</div>
+    <div class="ob-kid-list">
+      <input class="ob-input" id="ekDevice" type="text" maxlength="24" placeholder="e.g. TV, Dad's phone, Kids' phone">
+    </div>
     <button class="onb-next" onclick="saveEditKids()">Save changes</button>
     <button class="onb-back" onclick="closeEditKids()">Cancel</button>
   </div>
 </div>
 
-<!-- ═══════ PARENT LOCK SCREEN ═══════ -->
+<!-- ═══════ DEVICE SETUP (parent sign-in, once per device) ═══════ -->
+<div class="onboarding" id="deviceSetup">
+  <div class="onb-inner">
+    <div class="onb-emoji">📲</div>
+    <div class="onb-title">Set up this device</div>
+    <div class="onb-sub">A parent signs in once with their KidQuest login. This device then stays signed in and shares stars, charts and timers with the rest of the family.</div>
+    <div class="ob-kid-list">
+      <input class="ob-input" id="dsEmail" type="email" placeholder="Parent's KidQuest email" autocomplete="username">
+      <input class="ob-input" id="dsPassword" type="password" placeholder="KidQuest password" autocomplete="current-password">
+      <input class="ob-input" id="dsName" type="text" maxlength="24" placeholder="Name this device (e.g. TV, Dad's phone)">
+    </div>
+    <div class="lock-sub err" id="dsError"></div>
+    <button class="onb-next" id="dsBtn" onclick="deviceSignIn()">Sign in</button>
+  </div>
+</div>
+
+<!-- ═══════ WHO'S HERE (a PIN for each person) ═══════ -->
 <div class="lock-screen" id="lockScreen">
   <div class="lock-inner">
     <div class="lock-logo">KidQuest ✨</div>
+
+    <div id="whoPick">
+      <div class="lock-title">Who's here?</div>
+      <div class="lock-sub">Tap your picture</div>
+      <div class="who-grid" id="whoGrid"></div>
+    </div>
+
+    <div id="whoPin" style="display:none;">
     <div class="lock-icon" id="lockIcon">🔒</div>
-    <div class="lock-title" id="lockTitle">Parent Lock</div>
-    <div class="lock-sub" id="lockSub">Enter your PIN to unlock</div>
+    <div class="lock-title" id="lockTitle"></div>
+    <div class="lock-sub" id="lockSub">Enter your PIN</div>
 
     <div class="pin-dots" id="pinDots">
       <span class="pin-dot"></span>
@@ -564,7 +625,15 @@ body{
       <button class="pin-key pin-del" onclick="pinDelete()">⌫</button>
     </div>
 
-    <button class="pin-forgot" id="pinForgot" onclick="forgotPin()" style="display:none;">Forgot PIN?</button>
+    <div id="pwRow" style="display:none;">
+      <input class="ob-input pw-input" id="pwInput" type="password" placeholder="KidQuest password for this device" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')submitPassword()">
+      <button class="onb-next" onclick="submitPassword()">Check password</button>
+    </div>
+
+    <button class="pin-forgot" id="pinForgot" onclick="forgotPin()">Forgot PIN?</button>
+    <button class="onb-back" onclick="showWhoPick()">← Back</button>
+    </div>
   </div>
 </div>
 
@@ -577,8 +646,8 @@ body{
     <div class="app-tagline">Family adventure tracker</div>
   </div>
   <div class="header-btns">
-    <button class="lock-app-btn" onclick="openEditKids()" title="Edit kids">✏️</button>
-    <button class="lock-app-btn" onclick="lockApp()" title="Lock app">🔒</button>
+    <button class="lock-app-btn parent-only" onclick="openEditKids()" title="Edit family">✏️</button>
+    <button class="who-chip" id="whoChip" onclick="lockApp()" title="Switch person">👤</button>
   </div>
 </div>
 
@@ -590,18 +659,18 @@ body{
   <button class="tab-btn active"  onclick="switchTab('leaderboard',this)">🏅 Stars</button>
   <button class="tab-btn"         onclick="switchTab('chart',this)">📋 Chart</button>
   <button class="tab-btn"         onclick="switchTab('timers',this)">⏱️ Timers</button>
-  <button class="tab-btn"         onclick="switchTab('alarms',this)">⏰ Wake Up</button>
+  <button class="tab-btn parent-only" onclick="switchTab('alarms',this)">⏰ Wake Up</button>
   <button class="tab-btn"         onclick="switchTab('stories',this)">📖 Stories</button>
 </div>
 
 <!-- LEADERBOARD PANEL -->
 <div class="panel active" id="panel-leaderboard">
-  <div class="sec-label">Total stars dashboard ⭐</div>
+  <div class="sec-label">Family stars ⭐</div>
   <div class="dash-summary" id="dashSummary"></div>
-  <div class="sec-label">Leaderboard — tap + for bonus stars</div>
+  <div class="sec-label">Star Board<span class="parent-only"> — tap + for bonus stars</span></div>
   <div class="lb-list" id="lbList"></div>
   <div class="reset-zone">
-    <button class="reset-btn" onclick="resetPoints()">↺ Reset Bonus Stars</button>
+    <button class="reset-btn parent-only" onclick="resetPoints()">↺ Clear This Week's Bonus Stars</button>
   </div>
 </div>
 
@@ -613,14 +682,14 @@ body{
     <span class="leg"><span class="leg-ic">🥇</span> Gold</span>
     <span class="leg"><span class="leg-ic">🥈</span> Silver (½)</span>
     <span class="leg"><span class="leg-ic" style="color:var(--muted)">—</span> None</span>
-    <span class="leg-hint">Tap a cell to change</span>
+    <span class="leg-hint parent-only">Tap a cell to change</span>
   </div>
   <div class="chart-scroll">
     <div class="chart-grid" id="chartGrid"></div>
   </div>
   <div class="chart-totals" id="chartTotals"></div>
   <div class="reset-zone">
-    <button class="reset-btn" onclick="resetChart()">↺ Clear This Week's Chart</button>
+    <button class="reset-btn parent-only" onclick="resetChart()">↺ Clear This Week's Chart</button>
   </div>
 </div>
 
@@ -683,33 +752,39 @@ body{
 
 <div class="toast" id="toast"></div>
 
+<script src="firebase-config.js"></script>
 <script>
 // ═══════════════════════════════════════
-//  KIDS  (dynamic — set during onboarding)
+//  PROFILES  (kids + parents, synced; set during onboarding)
 // ═══════════════════════════════════════
 const EMOJI_POOL = ['🦁','🦋','🐬','🦊','🐼','🐨','🦄','🐸','🐯','🐧'];
 const COLOR_POOL = ['#f4a261','#e76f9a','#4ecdc4','#a78bfa','#06d6a0','#38bdf8','#ffd166','#fb923c','#f472b6','#60a5fa'];
+const PARENT_EMOJI = ['👩','👨'];
+const PARENT_COLOR = ['#f472b6','#60a5fa'];
 
-function loadKids(){
-  try{
-    const saved=JSON.parse(localStorage.getItem('kq_kids')||'null');
-    if(Array.isArray(saved) && saved.length) return saved;
-  }catch{}
-  return null;
+// Names come from the shared database, so escape them before putting them into HTML
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function newId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function lsGet(k){ try{ return localStorage.getItem(k); }catch{ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch{} }
+function ssGet(k){ try{ return sessionStorage.getItem(k); }catch{ return null; } }
+function ssSet(k,v){ try{ v==null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k,v); }catch{} }
+
+// Each profile: { id, type:'kid'|'parent', name, age, emoji, color, order, pinHash }
+// Kids keep a permanent id, so stars/charts/timers stay with them when others are removed.
+let PROFILES = {};
+let KIDS = [], PARENTS = [];
+function rebuildProfiles(){
+  const list=Object.entries(PROFILES).map(([id,p])=>({...p,id})).sort((a,b)=>(a.order??0)-(b.order??0));
+  KIDS=list.filter(p=>p.type==='kid');
+  PARENTS=list.filter(p=>p.type==='parent');
 }
-function saveKids(list){ localStorage.setItem('kq_kids', JSON.stringify(list.map(k=>({name:k.name, age:k.age, emoji:k.emoji, color:k.color})))); }
-// Keep each kid's saved emoji/colour so removing a kid doesn't reshuffle the others
-function enrichKids(list){
-  return list.map((k,i)=>({ name:k.name, age:k.age, emoji:k.emoji||EMOJI_POOL[i%EMOJI_POOL.length], color:k.color||COLOR_POOL[i%COLOR_POOL.length] }));
-}
+function kidById(id){ return KIDS.find(k=>k.id===id); }
 // First pool slot not used by any current kid (for newly added kids)
 function freePoolIdx(used){
   const i=EMOJI_POOL.findIndex(e=>!used.includes(e));
   return i<0 ? used.length%EMOJI_POOL.length : i;
 }
-
-// KIDS starts empty; populated by initFamily() once a profile exists
-let KIDS = [];
 
 // ═══════════════════════════════════════
 //  STORIES DATA
@@ -822,51 +897,167 @@ const STORIES = [
 ];
 
 // ═══════════════════════════════════════
-//  STATE
+//  STORE  — Firebase when configured, otherwise this device only
 // ═══════════════════════════════════════
-// Points are stored as a timestamped log so we can total by day & week.
-// Each entry: { k: kidIndex, ts: epochMillis, n: amount }
-function loadBonus(){ try{ return JSON.parse(localStorage.getItem('kq_bonus')||'null'); }catch{ return null; } }
-function saveBonus(){ localStorage.setItem('kq_bonus', JSON.stringify(bonusLog)); }
-let bonusLog = loadBonus();
-if(bonusLog===null){
-  bonusLog=[];
-  // migrate any old flat point counts into the log (counted as earned today)
-  try{
-    const old=JSON.parse(localStorage.getItem('kq_pts')||'null');
-    if(Array.isArray(old)){
-      const ts=startOfTodayTs();
-      old.forEach((n,i)=>{ if(n>0) bonusLog.push({k:i,ts,n}); });
-    }
-  }catch{}
-  saveBonus();
+// Both stores share one small API, so the rest of the app doesn't care which is in use:
+//   watch(col, since, cb)   since = {field, min} or null; cb(docsById, fromCache)
+//   put(col, id, data, merge=true) · add(col, data) · remove(col, id)
+// Writes show up locally straight away (even offline) and reach other devices when online.
+const FB_CONFIG  = window.KQ_FIREBASE_CONFIG || null;
+const FB_VERSION = '10.14.1';
+const FAMILY_ID  = 'home';
+let store = null;
+
+function isPlainObj(v){ return !!v && typeof v==='object' && !Array.isArray(v); }
+function deepMerge(a,b){
+  const out={...a};
+  for(const k in b) out[k] = isPlainObj(b[k])&&isPlainObj(a[k]) ? deepMerge(a[k],b[k]) : b[k];
+  return out;
 }
 
-// ── time helpers ──
-function startOfTodayTs(){ const d=new Date(); d.setHours(0,0,0,0); return d.getTime(); }
-function startOfWeekTs(){ const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-d.getDay()); return d.getTime(); } // Sunday anchor
-function sumSince(idx,sinceTs){ return bonusLog.reduce((s,e)=> (e.k===idx && e.ts>=sinceTs ? s+(e.n||1) : s), 0); }
-function todayPts(idx){ return sumSince(idx, startOfTodayTs()); }
-function weekPts(idx){ return sumSince(idx, startOfWeekTs()); }
-function totalToday(){ return KIDS.reduce((s,_,i)=>s+todayPts(i),0); }
-function totalWeek(){ return KIDS.reduce((s,_,i)=>s+weekPts(i),0); }
-
-function loadAlarms(){
-  try{ const s=JSON.parse(localStorage.getItem('kq_alarms')||'null'); if(Array.isArray(s)&&s.length===KIDS.length) return s; }catch{}
-  return KIDS.map(()=>({time:'07:00',on:false}));
+function makeLocalStore(){
+  const KEY='kq_db';
+  let db; try{ db=JSON.parse(lsGet(KEY)||'{}')||{}; }catch{ db={}; }
+  const subs=[];
+  const snapshot=(col,since)=>{
+    const m={}, c=db[col]||{};
+    for(const id in c) if(!since || c[id][since.field]>=since.min) m[id]=c[id];
+    return m;
+  };
+  const emit=col=>subs.filter(s=>s.col===col).forEach(s=>s.cb(snapshot(col,s.since),false));
+  const persist=col=>{ lsSet(KEY,JSON.stringify(db)); emit(col); };
+  // keep other tabs on this device in step
+  window.addEventListener('storage',e=>{
+    if(e.key!==KEY) return;
+    try{ db=JSON.parse(e.newValue||'{}')||{}; }catch{ return; }
+    [...new Set(subs.map(s=>s.col))].forEach(emit);
+  });
+  return {
+    kind:'local',
+    watch(col,since,cb){
+      const s={col,since,cb}; subs.push(s);
+      setTimeout(()=>cb(snapshot(col,since),false),0);
+      return ()=>{ const i=subs.indexOf(s); if(i>=0) subs.splice(i,1); };
+    },
+    put(col,id,data,merge=true){
+      db[col]=db[col]||{};
+      db[col][id] = merge&&db[col][id] ? deepMerge(db[col][id],data) : {...data};
+      persist(col); return Promise.resolve();
+    },
+    add(col,data){ return this.put(col,newId(),data,false); },
+    remove(col,id){ if(db[col]) delete db[col][id]; persist(col); return Promise.resolve(); },
+  };
 }
-function saveAlarms(a){ localStorage.setItem('kq_alarms',JSON.stringify(a)); }
-let alarms = [];
 
-const MEAL_SECS=25*60, TV_SECS=20*60;
-let timers = [];
+async function makeFirebaseStore(){
+  const base=`https://www.gstatic.com/firebasejs/${FB_VERSION}/`;
+  const [appMod,authMod,fs]=await Promise.all([
+    import(base+'firebase-app.js'), import(base+'firebase-auth.js'), import(base+'firebase-firestore.js'),
+  ]);
+  const app=appMod.initializeApp(FB_CONFIG);
+  const auth=authMod.getAuth(app);
+  // Offline cache shared by all tabs: keeps working with no internet and syncs later
+  const db=fs.initializeFirestore(app,{ localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
+  const col=c=>fs.collection(db,'families',FAMILY_ID,c);
+  const warn=e=>{ console.error('sync',e); };
+  return {
+    kind:'firebase',
+    currentUser(){ return new Promise(res=>{ const stop=authMod.onAuthStateChanged(auth,u=>{ stop(); res(u); }); }); },
+    signIn(email,pw){ return authMod.signInWithEmailAndPassword(auth,email,pw); },
+    // Re-checks the password this device signed in with (to reset a forgotten parent PIN)
+    verifyPassword(pw){ return authMod.signInWithEmailAndPassword(auth,auth.currentUser.email,pw); },
+    watch(c,since,cb){
+      const q = since ? fs.query(col(c), fs.where(since.field,'>=',since.min)) : col(c);
+      return fs.onSnapshot(q,{includeMetadataChanges:true},snap=>{
+        const m={}; snap.forEach(d=>{ m[d.id]=d.data(); });
+        cb(m, snap.metadata.fromCache);
+      }, e=>{ warn(e); showToast('⚠️ Sync problem — try reloading'); });
+    },
+    put(c,id,data,merge=true){ return fs.setDoc(fs.doc(col(c),id),data,{merge}).catch(warn); },
+    add(c,data){ return fs.addDoc(col(c),data).catch(warn); },
+    remove(c,id){ return fs.deleteDoc(fs.doc(col(c),id)).catch(warn); },
+  };
+}
+
+// ═══════════════════════════════════════
+//  DEVICE  (alarms ring only on the device chosen for them)
+// ═══════════════════════════════════════
+let DEVICE_ID = lsGet('kq_device');
+if(!DEVICE_ID){ DEVICE_ID='d'+newId(); lsSet('kq_device',DEVICE_ID); }
+function deviceName(){ return lsGet('kq_device_name') || 'This device'; }
+let DEVICES = {};
+function registerDevice(){ store.put('devices',DEVICE_ID,{ name:deviceName(), seen:Date.now() }); }
+function devName(id){
+  if(id===DEVICE_ID) return `${deviceName()} (this one)`;
+  return DEVICES[id]?.name || 'another device';
+}
+
+// ═══════════════════════════════════════
+//  SYNCED STATE
+// ═══════════════════════════════════════
+// stars:   { kid, ts, n, src:'bonus'|'skill', by }      one record per award
+// charts:  id `${kid}_${week}` → { kid, week, cells:{ 'behaviour_day':'gold'|'silver'|'' } }
+// timers:  id kid → { meal:{endsAt,remaining,by}, tv:{…} }
+// alarms:  id kid → { time, on, device }
+// devices: id device → { name, seen }
+let STARS={}, CHARTS={}, TIMERS={}, ALARMS={};
+
+// ── time helpers (weeks start on Sunday, local time) ──
+function dayStart(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function startOfTodayTs(){ return dayStart(new Date()).getTime(); }
+function weekStartDate(offset=0){ const d=dayStart(new Date()); d.setDate(d.getDate()-d.getDay()+offset*7); return d; }
+function startOfWeekTs(offset=0){ return weekStartDate(offset).getTime(); }
+function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function weekKey(offset=0){ return ymd(weekStartDate(offset)); }
+
+function starSum(kid,from,to=Infinity){
+  let s=0;
+  for(const id in STARS){ const e=STARS[id]; if(e.kid===kid && e.ts>=from && e.ts<to) s+=e.n||1; }
+  return s;
+}
+
+let unwatch=[], watchWeek='';
+// (Re)subscribe to everything. Star and chart queries only fetch this week and last week.
+function startWatches(onReady){
+  unwatch.forEach(u=>u&&u()); unwatch=[];
+  watchWeek=weekKey();
+  let ready=false;
+  unwatch.push(store.watch('profiles',null,(m,fromCache)=>{
+    PROFILES=m; rebuildProfiles();
+    // a new device's first answer may come from an empty cache — wait for the server
+    if(!ready){ if(fromCache && !Object.keys(m).length) return; ready=true; onReady&&onReady(); }
+    else onProfilesChanged();
+    scheduleRender();
+  }));
+  unwatch.push(store.watch('stars',  {field:'ts',  min:startOfWeekTs(-1)}, m=>{ STARS=m;  scheduleRender(); }));
+  unwatch.push(store.watch('charts', {field:'week',min:weekKey(-1)},       m=>{ CHARTS=m; scheduleRender(); }));
+  unwatch.push(store.watch('timers', null, m=>{ TIMERS=m;  scheduleRender(); }));
+  unwatch.push(store.watch('alarms', null, m=>{ ALARMS=m;  scheduleRender(); }));
+  unwatch.push(store.watch('devices',null, m=>{ DEVICES=m; scheduleRender(); }));
+}
+function checkWeekRollover(){ if(watchWeek && weekKey()!==watchWeek) startWatches(null); }
+
+let renderQueued=false;
+function scheduleRender(){
+  if(renderQueued) return; renderQueued=true;
+  setTimeout(()=>{ renderQueued=false; renderAll(); },16); // batches a burst of sync updates into one redraw
+}
+function renderAll(){
+  applyRole();
+  renderKidsStrip();
+  renderBoard();
+  renderChartKidTabs();
+  renderChart();
+  renderTimers();
+  // don't redraw alarms while someone is picking a time or device
+  if(!document.getElementById('alarmList').contains(document.activeElement)) renderAlarms();
+}
 
 // story
 let storyQueue=[], storySentIdx=0, activeStoryId=null;
 let storySpeed=0.9;
-let alarmCheckInterval=null;
 let ringAudioCtx=null, ringNodes=[];
-let ringingKidIdx=-1;
+let ringingKid=null;
 
 // ═══════════════════════════════════════
 //  TABS
@@ -886,195 +1077,209 @@ function renderKidsStrip(){
     <div class="kid-chip">
       <div class="kid-chip-emoji">${k.emoji}</div>
       <div>
-        <div class="kid-chip-name" style="color:${k.color}">${k.name}</div>
-        <div class="kid-chip-age">${k.age} yrs</div>
+        <div class="kid-chip-name" style="color:${k.color}">${esc(k.name)}</div>
+        <div class="kid-chip-age">${esc(k.age)} yrs</div>
       </div>
     </div>`).join('');
 }
 
 // ═══════════════════════════════════════
-//  LEADERBOARD
+//  STAR BOARD  (every star counts; each kid vs their own last week, no places)
 // ═══════════════════════════════════════
-const MEDALS=['🥇','🥈','🥉'];
-
 // ── chart star counters (gold + silver from the behavior chart) ──
-function chartGoldToday(idx){ const t=new Date().getDay(); let c=0; chart[idx].forEach(r=>{ if(r[t]==='gold') c++; }); return c; }
-function chartSilverToday(idx){ const t=new Date().getDay(); let c=0; chart[idx].forEach(r=>{ if(r[t]==='silver') c++; }); return c; }
-function chartGoldWeek(idx){ let c=0; chart[idx].forEach(r=>r.forEach(v=>{ if(v==='gold') c++; })); return c; }
-function chartSilverWeek(idx){ let c=0; chart[idx].forEach(r=>r.forEach(v=>{ if(v==='silver') c++; })); return c; }
+function chartDoc(kid,offset=0){ return CHARTS[`${kid}_${weekKey(offset)}`]; }
+function chartCell(kid,bi,di){ return chartDoc(kid)?.cells?.[`${bi}_${di}`] || ''; }
+// day = 0..6 for one day, or null for the whole week
+function chartCount(kid,offset=0,day=null){
+  let gold=0, silver=0;
+  const cells=chartDoc(kid,offset)?.cells||{};
+  for(const k in cells){
+    if(day!==null && +k.split('_')[1]!==day) continue;
+    if(cells[k]==='gold') gold++; else if(cells[k]==='silver') silver++;
+  }
+  return {gold,silver};
+}
 
-// ── combined totals per kid (bonus stars + chart stars) ──
+// ── combined totals per kid (bonus/skill stars + chart stars) ──
 // Gold = 1 star, silver = ½ star (partly done), bonus = face value
 const SILVER_VALUE = 0.5;
-function chartStars(gold,silver){ return gold + silver*SILVER_VALUE; }
-function kidStarsToday(idx){ return todayPts(idx) + chartStars(chartGoldToday(idx), chartSilverToday(idx)); }
-function kidStarsWeek(idx){ return weekPts(idx) + chartStars(chartGoldWeek(idx), chartSilverWeek(idx)); }
+function chartStars(c){ return c.gold + c.silver*SILVER_VALUE; }
+function kidStarsToday(kid){ return starSum(kid,startOfTodayTs()) + chartStars(chartCount(kid,0,new Date().getDay())); }
+function kidStarsWeek(kid,offset=0){ return starSum(kid,startOfWeekTs(offset),startOfWeekTs(offset+1)) + chartStars(chartCount(kid,offset)); }
 function fmtStars(n){ const w=Math.floor(n); return n===w ? String(w) : (w?w:'')+'½'; }
 
-function renderLeaderboard(){
-  // grand totals across all kids
-  let goldT=0,silverT=0,bonusT=0, goldW=0,silverW=0,bonusW=0;
-  KIDS.forEach((k,i)=>{
-    goldT+=chartGoldToday(i); silverT+=chartSilverToday(i); bonusT+=todayPts(i);
-    goldW+=chartGoldWeek(i);  silverW+=chartSilverWeek(i);  bonusW+=weekPts(i);
+function renderBoard(){
+  const today=new Date().getDay();
+  let goldT=0,silverT=0,bonusT=0, goldW=0,silverW=0,bonusW=0, lastW=0;
+  KIDS.forEach(k=>{
+    const ct=chartCount(k.id,0,today), cw=chartCount(k.id,0);
+    goldT+=ct.gold; silverT+=ct.silver; bonusT+=starSum(k.id,startOfTodayTs());
+    goldW+=cw.gold; silverW+=cw.silver; bonusW+=starSum(k.id,startOfWeekTs(),startOfWeekTs(1));
+    lastW+=kidStarsWeek(k.id,-1);
   });
-  const tToday=chartStars(goldT,silverT)+bonusT;
-  const tWeek =chartStars(goldW,silverW)+bonusW;
+  const tToday=chartStars({gold:goldT,silver:silverT})+bonusT;
+  const tWeek =chartStars({gold:goldW,silver:silverW})+bonusW;
 
-  const dayLeader  = KIDS.map((k,i)=>({k,p:kidStarsToday(i)})).sort((a,b)=>b.p-a.p)[0];
-  const weekLeader = KIDS.map((k,i)=>({k,p:kidStarsWeek(i)})).sort((a,b)=>b.p-a.p)[0];
-
-  // ── top dashboard summary ──
+  // ── family totals ──
   document.getElementById('dashSummary').innerHTML = `
     <div class="ds-card day">
       <div class="ds-label">Today</div>
       <div class="ds-num">${fmtStars(tToday)}</div>
-      <div class="ds-unit">stars</div>
+      <div class="ds-unit">family stars</div>
       <div class="ds-break">🥇 ${goldT} &nbsp; 🥈 ${silverT} &nbsp; ➕ ${bonusT}</div>
-      <div class="ds-leader">${tToday>0?'⭐ '+dayLeader.k.name+' in front':'No stars yet today'}</div>
+      <div class="ds-leader">${tToday>0?'✨ Every star counts!':'No stars yet today'}</div>
     </div>
     <div class="ds-card week">
       <div class="ds-label">This Week</div>
       <div class="ds-num">${fmtStars(tWeek)}</div>
-      <div class="ds-unit">stars</div>
+      <div class="ds-unit">family stars</div>
       <div class="ds-break">🥇 ${goldW} &nbsp; 🥈 ${silverW} &nbsp; ➕ ${bonusW}</div>
-      <div class="ds-leader">${tWeek>0?'🏆 '+weekLeader.k.name+' leading':'Fresh week!'}</div>
+      <div class="ds-leader">Last week: ${fmtStars(lastW)}</div>
     </div>`;
 
-  // ── per-kid leaderboard, sorted by combined weekly stars ──
-  const sorted=KIDS.map((k,i)=>({...k,i,day:kidStarsToday(i),week:kidStarsWeek(i)}))
-                   .sort((a,b)=> b.week-a.week || b.day-a.day);
-  document.getElementById('lbList').innerHTML=sorted.map((k,rank)=>`
+  // ── one card per kid, in family order (no ranking) ──
+  document.getElementById('lbList').innerHTML=KIDS.map(k=>{
+    const day=kidStarsToday(k.id), week=kidStarsWeek(k.id), last=kidStarsWeek(k.id,-1);
+    const trend = week>last ? `⬆ ${fmtStars(week-last)} more than last week` : `last week ${fmtStars(last)}`;
+    return `
     <div class="lb-card" style="--kc:${k.color}">
-      <div class="lb-medal">${MEDALS[rank]||'⭐'}</div>
+      <div class="lb-medal">${k.emoji}</div>
       <div class="lb-info">
-        <div class="lb-name">${k.emoji} ${k.name}</div>
-        <div class="lb-age">${k.age} years old</div>
+        <div class="lb-name">${esc(k.name)}</div>
+        <div class="lb-age">${esc(k.age)} yrs · ${trend}</div>
       </div>
       <div class="lb-stats">
-        <div class="lb-stat day"><div class="v" id="dv-${k.i}">${fmtStars(k.day)}</div><div class="l">Today</div></div>
-        <div class="lb-stat week"><div class="v" id="wv-${k.i}">${fmtStars(k.week)}</div><div class="l">Week</div></div>
+        <div class="lb-stat day"><div class="v" id="dv-${k.id}">${fmtStars(day)}</div><div class="l">Today</div></div>
+        <div class="lb-stat week"><div class="v" id="wv-${k.id}">${fmtStars(week)}</div><div class="l">Week</div></div>
       </div>
-      <button class="plus-btn" onclick="openBonus(${k.i})" title="Add bonus stars">+</button>
-    </div>`).join('');
+      <button class="plus-btn parent-only" onclick="openBonus('${k.id}')" title="Add bonus stars">+</button>
+    </div>`;
+  }).join('');
 }
 
 // ── bonus stars chooser ──
-let bonusKid=-1;
-function openBonus(idx){
-  bonusKid=idx;
-  document.getElementById('bonusTitle').textContent=`${KIDS[idx].emoji} ${KIDS[idx].name}`;
+let bonusKid=null;
+function openBonus(id){
+  const k=kidById(id); if(!k || !isParent()) return;
+  bonusKid=id;
+  document.getElementById('bonusTitle').textContent=`${k.emoji} ${k.name}`;
   document.getElementById('bonusSub').textContent='How many bonus stars to add?';
   document.getElementById('bonusOverlay').classList.add('show');
 }
-function chooseBonus(n){ const idx=bonusKid; closeBonus(); if(idx>=0) addBonus(idx,n); }
-function closeBonus(){ document.getElementById('bonusOverlay').classList.remove('show'); bonusKid=-1; }
+function chooseBonus(n){ const id=bonusKid; closeBonus(); if(id) addBonus(id,n); }
+function closeBonus(){ document.getElementById('bonusOverlay').classList.remove('show'); bonusKid=null; }
 
-function addBonus(idx,amount){
-  bonusLog.push({k:idx, ts:Date.now(), n:amount});
-  saveBonus();
-  renderLeaderboard();
-  const dv=document.getElementById('dv-'+idx);
-  if(dv){ dv.classList.add('bump'); setTimeout(()=>dv.classList.remove('bump'),360); }
-  speak(`${amount} bonus star${amount>1?'s':''} for ${KIDS[idx].name}! Great job!`);
-  showToast(`🌟 +${amount} bonus for ${KIDS[idx].name}!`);
+function addBonus(id,amount){
+  const k=kidById(id); if(!k) return;
+  store.add('stars',{ kid:id, ts:Date.now(), n:amount, src:'bonus', by:currentWho?.id||null });
+  setTimeout(()=>{
+    const dv=document.getElementById('dv-'+id);
+    if(dv){ dv.classList.add('bump'); setTimeout(()=>dv.classList.remove('bump'),360); }
+  },60);
+  speak(`${amount} bonus star${amount>1?'s':''} for ${k.name}! Great job!`);
+  showToast(`🌟 +${amount} bonus for ${k.name}!`);
 }
 
 function resetPoints(){
-  if(!confirm('Reset all bonus stars to zero? (Chart stars are not affected.)')) return;
-  bonusLog=[]; saveBonus(); renderLeaderboard();
-  showToast('Bonus stars reset!');
+  if(!isParent()) return;
+  if(!confirm("Clear this week's bonus stars? (Chart stars are not affected.)")) return;
+  const from=startOfWeekTs();
+  for(const id in STARS){ const e=STARS[id]; if(e.src==='bonus' && e.ts>=from) store.remove('stars',id); }
+  showToast("This week's bonus stars cleared");
 }
 
 // ═══════════════════════════════════════
-//  TIMERS
+//  TIMERS  (synced: start on one device, the countdown shows on all)
 // ═══════════════════════════════════════
-function newTimerState(){
-  return {
-    meal:{ secs:MEAL_SECS, running:false, interval:null },
-    tv:  { secs:TV_SECS,   running:false, interval:null },
-  };
+const MEAL_SECS=25*60, TV_SECS=20*60;
+function fullSecs(type){ return type==='meal'?MEAL_SECS:TV_SECS; }
+function mmss(s){ return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+
+// Stored as an end time rather than a countdown, so every device shows the same time
+// and a phone that slept catches up instead of falling behind.
+function timerState(kid,type){
+  const t=TIMERS[kid]?.[type]||{}, full=fullSecs(type);
+  if(t.endsAt){
+    const secs=Math.max(0,Math.ceil((t.endsAt-Date.now())/1000));
+    return { running:secs>0, expired:secs<=0, secs, by:t.by, full };
+  }
+  return { running:false, expired:false, secs: t.remaining==null ? full : t.remaining, by:t.by, full };
 }
 
-// Renders from current timer state, so re-rendering (e.g. after renaming a kid)
-// keeps running timers showing the right time and button
-function timerBoxHtml(i,type){
-  const t=timers[i][type], full=type==='meal'?MEAL_SECS:TV_SECS;
-  const label=t.running?'⏸ Pause':(t.secs<full&&t.secs>0?'▶ Resume':'▶ Start');
-  const m=Math.floor(t.secs/60), s=t.secs%60;
+// Kids only see their own timers; parents see everyone's
+function visibleKids(){ return isParent() ? KIDS : KIDS.filter(k=>k.id===currentWho?.id); }
+
+function timerBoxHtml(kid,type){
   return `
-        <div class="timer-box ${type} ${t.running?'running':''}" id="${type}-box-${i}">
+        <div class="timer-box ${type}" id="${type}-box-${kid}">
           <span class="timer-icon">${type==='meal'?'🍽️':'📺'}</span>
           <div class="timer-type">${type==='meal'?'Meal · 25 min':'TV · 20 min'}</div>
-          <div class="timer-digits ${t.secs<=0?'expired':''}" id="${type}-dig-${i}">${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</div>
+          <div class="timer-digits" id="${type}-dig-${kid}"></div>
           <div class="timer-controls">
-            <button class="tc-btn tc-start" id="${type}-stbtn-${i}" onclick="toggleTimer(${i},'${type}')">${label}</button>
-            <button class="tc-btn tc-reset" id="${type}-rsbtn-${i}" onclick="resetTimerDo(${i},'${type}')">↺</button>
+            <button class="tc-btn tc-start" id="${type}-stbtn-${kid}" onclick="toggleTimer('${kid}','${type}')">▶ Start</button>
+            <button class="tc-btn tc-reset" id="${type}-rsbtn-${kid}" onclick="resetTimerDo('${kid}','${type}')">↺</button>
           </div>
         </div>`;
 }
 
 function renderTimers(){
-  document.getElementById('timersContainer').innerHTML=KIDS.map((kid,i)=>`
+  const list=visibleKids();
+  document.getElementById('timersContainer').innerHTML=list.map((kid,i)=>`
     <div class="kid-block">
       <div class="kid-block-header">
         <div class="kid-block-avatar" style="--kc:${kid.color};border-color:${kid.color}">${kid.emoji}</div>
-        <div class="kid-block-name" style="color:${kid.color}">${kid.name}</div>
+        <div class="kid-block-name" style="color:${kid.color}">${esc(kid.name)}</div>
       </div>
-      <div class="timers-row">${timerBoxHtml(i,'meal')}${timerBoxHtml(i,'tv')}
+      <div class="timers-row">${timerBoxHtml(kid.id,'meal')}${timerBoxHtml(kid.id,'tv')}
       </div>
-      ${i<KIDS.length-1?'<div class="divider"></div>':''}
+      ${i<list.length-1?'<div class="divider"></div>':''}
     </div>`).join('');
+  updateTimerDisplays();
 }
 
-function toggleTimer(ki,type){
-  const t=timers[ki][type];
-  if(t.running){ pauseTimer(ki,type); }
-  else{ if(t.secs<=0) resetTimerDo(ki,type); startTimer(ki,type); }
+function updateTimerDisplays(){
+  visibleKids().forEach(k=>['meal','tv'].forEach(type=>{
+    const box=document.getElementById(`${type}-box-${k.id}`); if(!box) return;
+    const s=timerState(k.id,type);
+    box.classList.toggle('running',s.running);
+    const dig=document.getElementById(`${type}-dig-${k.id}`);
+    dig.textContent=mmss(s.secs);
+    dig.classList.toggle('expired',s.expired);
+    document.getElementById(`${type}-stbtn-${k.id}`).textContent =
+      s.running ? '⏸ Pause' : (s.secs<s.full && s.secs>0 ? '▶ Resume' : '▶ Start');
+  }));
 }
 
-function startTimer(ki,type){
-  const t=timers[ki][type]; t.running=true;
-  document.getElementById(`${type}-box-${ki}`).classList.add('running');
-  document.getElementById(`${type}-stbtn-${ki}`).textContent='⏸ Pause';
-  updateDig(ki,type);
-  t.interval=setInterval(()=>{
-    t.secs--;
-    updateDig(ki,type);
-    onTick(ki,type,t.secs);
-    if(t.secs<=0){
-      clearInterval(t.interval); t.running=false;
-      document.getElementById(`${type}-box-${ki}`).classList.remove('running');
-      document.getElementById(`${type}-dig-${ki}`).classList.add('expired');
-      document.getElementById(`${type}-stbtn-${ki}`).textContent='▶ Start';
-    }
-  },1000);
+function toggleTimer(kid,type){
+  const s=timerState(kid,type);
+  if(s.running){
+    store.put('timers',kid,{[type]:{ endsAt:null, remaining:s.secs, by:DEVICE_ID }});
+  } else {
+    const secs = s.secs<=0 ? s.full : s.secs;
+    store.put('timers',kid,{[type]:{ endsAt:Date.now()+secs*1000, remaining:secs, by:DEVICE_ID }});
+  }
 }
 
-function pauseTimer(ki,type){
-  const t=timers[ki][type]; clearInterval(t.interval); t.running=false;
-  document.getElementById(`${type}-box-${ki}`).classList.remove('running');
-  document.getElementById(`${type}-stbtn-${ki}`).textContent='▶ Resume';
+function resetTimerDo(kid,type){
+  store.put('timers',kid,{[type]:{ endsAt:null, remaining:null, by:DEVICE_ID }});
+  showToast(`${kidById(kid)?.name||''}'s ${type} timer reset`);
 }
 
-function resetTimerDo(ki,type){
-  const t=timers[ki][type]; clearInterval(t.interval); t.running=false;
-  t.secs=type==='meal'?MEAL_SECS:TV_SECS;
-  document.getElementById(`${type}-box-${ki}`).classList.remove('running');
-  document.getElementById(`${type}-dig-${ki}`).classList.remove('expired');
-  document.getElementById(`${type}-stbtn-${ki}`).textContent='▶ Start';
-  updateDig(ki,type);
-  showToast(`${KIDS[ki].name}'s ${type} timer reset`);
+// Only the device that started a timer speaks, so the whole house doesn't talk at once
+const lastSecs={};
+function timerTick(){
+  updateTimerDisplays();
+  KIDS.forEach(k=>['meal','tv'].forEach(type=>{
+    const key=k.id+'_'+type, s=timerState(k.id,type), prev=lastSecs[key];
+    lastSecs[key]=s.secs;
+    if(prev==null || s.secs>=prev || s.by!==DEVICE_ID || !TIMERS[k.id]?.[type]?.endsAt) return;
+    if(prev-s.secs<=3){ for(let x=prev-1;x>=s.secs;x--) onTick(k.id,type,x); }
+    else if(s.secs===0) onTick(k.id,type,0); // woke up after the end: still say time's up
+  }));
 }
 
-function updateDig(ki,type){
-  const s=timers[ki][type].secs, m=Math.floor(s/60), sec=s%60;
-  document.getElementById(`${type}-dig-${ki}`).textContent=
-    `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-}
-
-function onTick(ki,type,secs){
-  const name=KIDS[ki].name;
+function onTick(kid,type,secs){
+  const name=kidById(kid)?.name||'';
   if(type==='meal'){
     const mins=Math.floor(secs/60), rem=secs%60;
     if(secs>300){ if(rem===0&&mins>0&&mins%5===0) speak(`${name}, ${mins} minutes left to finish your food.`); }
@@ -1087,39 +1292,53 @@ function onTick(ki,type,secs){
 }
 
 // ═══════════════════════════════════════
-//  ALARMS
+//  ALARMS  (each rings only on the device picked for it)
 // ═══════════════════════════════════════
+function alarmOf(kid){ return { time:'07:00', on:false, device:null, ...(ALARMS[kid]||{}) }; }
+
 function renderAlarms(){
-  document.getElementById('alarmList').innerHTML=KIDS.map((kid,i)=>`
+  const devIds=Object.keys(DEVICES);
+  document.getElementById('alarmList').innerHTML=KIDS.map(kid=>{
+    const a=alarmOf(kid.id);
+    const opts=[...devIds, ...(a.device&&!devIds.includes(a.device)?[a.device]:[])]
+      .map(id=>`<option value="${id}" ${id===a.device?'selected':''}>${esc(devName(id))}</option>`).join('');
+    return `
     <div class="alarm-card">
       <div class="alarm-top">
         <div class="alarm-avatar" style="--kc:${kid.color};border-color:${kid.color}">${kid.emoji}</div>
-        <div class="alarm-name" style="color:${kid.color}">${kid.name}</div>
-        <div class="alarm-status-dot ${alarms[i].on?'on':''}" id="adot-${i}"></div>
+        <div class="alarm-name" style="color:${kid.color}">${esc(kid.name)}</div>
+        <div class="alarm-status-dot ${a.on?'on':''}"></div>
       </div>
       <div class="alarm-time-row">
-        <input type="time" class="alarm-time-input" id="atime-${i}"
-          value="${alarms[i].time}"
-          onchange="saveAlarmTime(${i},this.value)">
-        <button class="alarm-toggle ${alarms[i].on?'on':''}" id="atog-${i}"
-          onclick="toggleAlarm(${i})"></button>
+        <input type="time" class="alarm-time-input" value="${esc(a.time)}"
+          onchange="saveAlarmTime('${kid.id}',this.value)">
+        <button class="alarm-toggle ${a.on?'on':''}" onclick="toggleAlarm('${kid.id}')"></button>
       </div>
-      <div class="alarm-label" id="alabel-${i}">${alarms[i].on?'Alarm ON ✓':'Alarm OFF'}</div>
-    </div>`).join('');
+      ${devIds.length>1 || (a.device && a.device!==DEVICE_ID) ? `
+      <label class="alarm-device-row">Rings on
+        <select class="alarm-device" onchange="setAlarmDevice('${kid.id}',this.value)">
+          ${a.device?'':'<option value="" selected>Choose a device</option>'}${opts}
+        </select>
+      </label>` : ''}
+      <div class="alarm-label">${a.on?`Alarm ON ✓ · rings on ${esc(devName(a.device))}`:'Alarm OFF'}</div>
+    </div>`;
+  }).join('');
 }
 
-function saveAlarmTime(idx,val){
-  alarms[idx].time=val; saveAlarms(alarms);
-  showToast(`${KIDS[idx].name}'s alarm set to ${val}`);
+function saveAlarmTime(kid,val){
+  store.put('alarms',kid,{ time:val });
+  showToast(`${kidById(kid)?.name}'s alarm set to ${val}`);
 }
 
-function toggleAlarm(idx){
-  alarms[idx].on=!alarms[idx].on; saveAlarms(alarms);
-  document.getElementById(`atog-${idx}`).classList.toggle('on',alarms[idx].on);
-  document.getElementById(`adot-${idx}`).classList.toggle('on',alarms[idx].on);
-  document.getElementById(`alabel-${idx}`).textContent=alarms[idx].on?'Alarm ON ✓':'Alarm OFF';
-  showToast(alarms[idx].on?`⏰ ${KIDS[idx].name}'s alarm is on!`:`${KIDS[idx].name}'s alarm off`);
+function toggleAlarm(kid){
+  const a=alarmOf(kid), on=!a.on;
+  // turning on with no device picked yet → ring here
+  store.put('alarms',kid,{ time:a.time, on, device: a.device||DEVICE_ID });
+  const name=kidById(kid)?.name;
+  showToast(on?`⏰ ${name}'s alarm is on!`:`${name}'s alarm off`);
 }
+
+function setAlarmDevice(kid,device){ if(device) store.put('alarms',kid,{ device }); }
 
 // Kids whose alarms fired while another was still ringing wait here
 let ringQueue=[];
@@ -1130,16 +1349,17 @@ function checkAlarms(){
   const hhmm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   if(hhmm===lastAlarmMinute) return; // check each minute once, whatever second we land on
   lastAlarmMinute=hhmm;
-  alarms.forEach((a,i)=>{
-    if(a.on && a.time===hhmm && i!==ringingKidIdx && !ringQueue.includes(i)){
-      if(ringingKidIdx===-1) ringAlarm(i); else ringQueue.push(i);
+  KIDS.forEach(k=>{
+    const a=alarmOf(k.id);
+    if(a.on && a.time===hhmm && a.device===DEVICE_ID && k.id!==ringingKid && !ringQueue.includes(k.id)){
+      if(ringingKid===null) ringAlarm(k.id); else ringQueue.push(k.id);
     }
   });
 }
 
-function ringAlarm(idx){
-  ringingKidIdx=idx;
-  const kid=KIDS[idx];
+function ringAlarm(id){
+  const kid=kidById(id); if(!kid) return;
+  ringingKid=id;
   document.getElementById('ringEmoji').textContent=kid.emoji;
   document.getElementById('ringName').textContent=`Wake up, ${kid.name}! 🌅`;
   document.getElementById('ringOverlay').classList.add('show');
@@ -1152,12 +1372,10 @@ function ringAlarm(idx){
 
 function dismissAlarm(){
   window.speechSynthesis&&window.speechSynthesis.cancel();
-  if(ringingKidIdx>=0){
+  if(ringingKid!==null){
     // turn alarm off after firing so it doesn't re-ring tomorrow
-    alarms[ringingKidIdx].on=false;
-    saveAlarms(alarms);
-    renderAlarms();
-    ringingKidIdx=-1;
+    store.put('alarms',ringingKid,{ on:false });
+    ringingKid=null;
   }
   // next kid in line rings straight away
   if(ringQueue.length){ ringAlarm(ringQueue.shift()); return; }
@@ -1195,7 +1413,7 @@ function playRingPattern(){
   });
   // repeat
   ringNodes._tmr=setTimeout(()=>{
-    if(ringingKidIdx>=0) playRingPattern();
+    if(ringingKid!==null) playRingPattern();
   }, beepSeq.length*220+300);
 }
 
@@ -1366,38 +1584,22 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const STAR_CYCLE = ['', 'gold', 'silver'];
 const STAR_ICON  = { '':'—', gold:'🥇', silver:'🥈' };
 
-// Identify this week with a Sunday-anchored key so chart auto-resets weekly
-function weekKey(){
-  const d=new Date();
-  d.setHours(0,0,0,0);
-  d.setDate(d.getDate()-d.getDay()); // back to Sunday
-  return d.toISOString().slice(0,10);
-}
-
-function loadChart(){
-  try{
-    const saved=JSON.parse(localStorage.getItem('kq_chart')||'null');
-    if(saved && saved.week===weekKey() && Array.isArray(saved.data) && saved.data.length===KIDS.length) return saved.data;
-  }catch{}
-  // fresh empty chart: [kid][behavior][day] = ''
-  return KIDS.map(()=>BEHAVIORS.map(()=>DAYS.map(()=>'')));
-}
-function saveChart(){
-  localStorage.setItem('kq_chart', JSON.stringify({ week:weekKey(), data:chart }));
-}
-let chart = [];
-let chartKid = 0;
+// One record per kid per week (Sunday-anchored), so last week stays for comparison
+let chartKid = null;
 
 function renderChartKidTabs(){
-  document.getElementById('chartKidTabs').innerHTML = KIDS.map((k,i)=>`
-    <button class="ck-tab ${i===chartKid?'active':''}"
-      style="${i===chartKid?`border-color:${k.color};color:${k.color}`:''}"
-      onclick="selectChartKid(${i})">${k.emoji} ${k.name}</button>`).join('');
+  const list=visibleKids();
+  if(!list.some(k=>k.id===chartKid)) chartKid=list[0]?.id||null;
+  document.getElementById('chartKidTabs').innerHTML = list.map(k=>`
+    <button class="ck-tab ${k.id===chartKid?'active':''}"
+      style="${k.id===chartKid?`border-color:${k.color};color:${k.color}`:''}"
+      onclick="selectChartKid('${k.id}')">${k.emoji} ${esc(k.name)}</button>`).join('');
 }
 
-function selectChartKid(i){ chartKid=i; renderChartKidTabs(); renderChart(); }
+function selectChartKid(id){ chartKid=id; renderChartKidTabs(); renderChart(); }
 
 function renderChart(){
+  if(!chartKid){ document.getElementById('chartGrid').innerHTML=''; document.getElementById('chartTotals').innerHTML=''; return; }
   const todayCol = new Date().getDay(); // 0=Sun
   let html = '<div class="cg-cell cg-corner">Activity</div>';
   // day header row
@@ -1409,11 +1611,10 @@ function renderChart(){
     const alt = bi%2===1;
     html += `<div class="cg-cell cg-rowhead ${alt?'alt':''}">${b}</div>`;
     DAYS.forEach((d,di)=>{
-      const val = chart[chartKid][bi][di];
-      const ic  = STAR_ICON[val];
+      const val = chartCell(chartKid,bi,di);
       const dashCls = val==='' ? 'cg-dash' : '';
       html += `<div class="cg-cell cg-star ${alt?'alt':''} ${di===todayCol?'today-col':''} ${dashCls}"
-        onclick="cycleStar(${bi},${di})">${ic}</div>`;
+        onclick="cycleStar(${bi},${di})">${STAR_ICON[val]||'—'}</div>`;
     });
   });
   document.getElementById('chartGrid').innerHTML = html;
@@ -1421,69 +1622,100 @@ function renderChart(){
 }
 
 function cycleStar(bi,di){
-  const cur = chart[chartKid][bi][di];
-  const idx = STAR_CYCLE.indexOf(cur);
-  const next = STAR_CYCLE[(idx+1)%STAR_CYCLE.length];
-  chart[chartKid][bi][di] = next;
-  saveChart();
-  renderChart();
-  renderLeaderboard(); // keep home dashboard star totals in sync
-  if(next==='gold'){ speak(`Gold star for ${KIDS[chartKid].name}!`); }
+  if(!isParent() || !chartKid) return; // kids can look, parents give stars
+  const cur = chartCell(chartKid,bi,di);
+  const next = STAR_CYCLE[(STAR_CYCLE.indexOf(cur)+1)%STAR_CYCLE.length];
+  const week = weekKey();
+  // merge just this one cell, so two parents ticking at once don't overwrite each other
+  store.put('charts',`${chartKid}_${week}`,{ kid:chartKid, week, cells:{ [`${bi}_${di}`]:next } });
+  if(next==='gold'){ speak(`Gold star for ${kidById(chartKid)?.name}!`); }
 }
 
 function renderChartTotals(){
-  let gold=0, silver=0;
-  chart[chartKid].forEach(row=>row.forEach(v=>{ if(v==='gold')gold++; else if(v==='silver')silver++; }));
+  const c=chartCount(chartKid,0);
   document.getElementById('chartTotals').innerHTML = `
-    <div class="ct-pill">🥇 <span class="ct-big">${gold}</span> gold</div>
-    <div class="ct-pill">🥈 <span class="ct-big" style="color:var(--silver)">${silver}</span> silver</div>
-    <div class="ct-pill">⭐ <span class="ct-big" style="color:var(--green)">${fmtStars(chartStars(gold,silver))}</span> stars</div>`;
+    <div class="ct-pill">🥇 <span class="ct-big">${c.gold}</span> gold</div>
+    <div class="ct-pill">🥈 <span class="ct-big" style="color:var(--silver)">${c.silver}</span> silver</div>
+    <div class="ct-pill">⭐ <span class="ct-big" style="color:var(--green)">${fmtStars(chartStars(c))}</span> stars</div>`;
 }
 
 function resetChart(){
-  if(!confirm(`Clear ${KIDS[chartKid].name}'s chart for this week?`)) return;
-  chart[chartKid] = BEHAVIORS.map(()=>DAYS.map(()=>''));
-  saveChart();
-  renderChart();
-  renderLeaderboard(); // sync home dashboard
-  showToast(`${KIDS[chartKid].name}'s chart cleared`);
+  if(!isParent() || !chartKid) return;
+  const name=kidById(chartKid)?.name;
+  if(!confirm(`Clear ${name}'s chart for this week?`)) return;
+  const week=weekKey();
+  store.put('charts',`${chartKid}_${week}`,{ kid:chartKid, week, cells:{} },false);
+  showToast(`${name}'s chart cleared`);
 }
 
 // ═══════════════════════════════════════
-//  PARENT LOCK (PIN)
+//  WHO'S HERE  (a PIN for each person; kids get their own screen)
 // ═══════════════════════════════════════
+let currentWho = null;      // { id, type }
+let pinTarget = null;       // profile whose PIN is being typed
 let pinEntry = '';
 let pinMode = 'unlock';     // 'unlock' | 'setup' | 'confirm'
-let pinFirstEntry = '';     // holds first PIN during setup
+let pinFirstEntry = '';     // holds first PIN while choosing a new one
 
-// Lightweight obfuscation (not real crypto — just keeps it out of plain sight)
-function hashPin(p){
-  let h=0;
-  for(let i=0;i<p.length;i++){ h=((h<<5)-h)+p.charCodeAt(i); h|=0; }
+function isParent(){ return currentWho?.type==='parent'; }
+
+// Salted with the profile id so two people with the same PIN don't share a hash
+async function hashPin(id,pin){
+  const text=`kq:${id}:${pin}`;
+  if(window.crypto?.subtle){
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));
+    return 's'+[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  let h=0; for(let i=0;i<text.length;i++){ h=((h<<5)-h)+text.charCodeAt(i); h|=0; }
   return 'h'+h;
 }
-function getStoredPin(){ return localStorage.getItem('kq_pin'); }
-function setStoredPin(p){ localStorage.setItem('kq_pin', hashPin(p)); }
 
-function showLock(){
-  pinEntry=''; pinFirstEntry='';
-  const stored=getStoredPin();
-  if(stored){
-    pinMode='unlock';
-    setLockText('🔒','Parent Lock','Enter your PIN to unlock');
-    document.getElementById('pinForgot').style.display='block';
-  } else {
-    pinMode='setup';
-    setLockText('🆕','Create a PIN','Set a 4-digit PIN for parent access');
-    document.getElementById('pinForgot').style.display='none';
-  }
-  updatePinDots();
+function showWho(){
+  currentWho=null; ssSet('kq_who',null);
+  showWhoPick();
   document.getElementById('lockScreen').classList.add('show');
+  applyRole();
 }
 
-function hideLock(){
-  document.getElementById('lockScreen').classList.remove('show');
+function showWhoPick(){
+  pinTarget=null; pinEntry='';
+  document.getElementById('whoPin').style.display='none';
+  document.getElementById('whoPick').style.display='block';
+  renderWhoGrid();
 }
+
+function renderWhoGrid(){
+  document.getElementById('whoGrid').innerHTML=[...KIDS,...PARENTS].map(p=>`
+    <button class="who-tile" style="--kc:${p.color}" onclick="pickWho('${p.id}')">
+      <span class="who-emoji">${p.emoji}</span>
+      <span class="who-name">${esc(p.name)}</span>
+    </button>`).join('');
+}
+
+function pickWho(id){
+  const p=PROFILES[id]; if(!p) return;
+  if(!p.pinHash){ enterAs(id); return; }
+  pinTarget={...p,id};
+  pinMode='unlock'; pinEntry=''; pinFirstEntry='';
+  document.getElementById('whoPick').style.display='none';
+  document.getElementById('whoPin').style.display='block';
+  document.getElementById('pwRow').style.display='none';
+  document.getElementById('pinPad').style.display='';
+  document.getElementById('pinForgot').style.display='block';
+  setLockText(p.emoji, p.name, 'Enter your PIN');
+  updatePinDots();
+}
+
+function enterAs(id){
+  const p=PROFILES[id]; if(!p) return;
+  currentWho={ id, type:p.type }; ssSet('kq_who',id);
+  document.getElementById('lockScreen').classList.remove('show');
+  chartKid=null;
+  renderAll();
+  showToast(`👋 Hi ${p.name}!`);
+}
+
+function lockApp(){ showWho(); }
 
 function setLockText(icon,title,sub,isErr){
   document.getElementById('lockIcon').textContent=icon;
@@ -1511,35 +1743,26 @@ function pinDelete(){
   updatePinDots();
 }
 
-function handlePinComplete(){
+async function handlePinComplete(){
+  if(!pinTarget) return;
   if(pinMode==='unlock'){
-    if(hashPin(pinEntry)===getStoredPin()){
-      unlockSuccess();
-    } else {
-      pinError('Wrong PIN, try again');
-    }
+    if(await hashPin(pinTarget.id,pinEntry)===pinTarget.pinHash) enterAs(pinTarget.id);
+    else pinError('Wrong PIN, try again');
   } else if(pinMode==='setup'){
-    pinFirstEntry=pinEntry;
-    pinEntry='';
+    pinFirstEntry=pinEntry; pinEntry='';
     pinMode='confirm';
     setLockText('🔁','Confirm PIN','Enter the same PIN again');
     updatePinDots();
   } else if(pinMode==='confirm'){
     if(pinEntry===pinFirstEntry){
-      setStoredPin(pinEntry);
-      showToast('🔐 Parent PIN created!');
-      unlockSuccess();
+      store.put('profiles',pinTarget.id,{ pinHash: await hashPin(pinTarget.id,pinEntry) });
+      showToast('🔐 New PIN saved!');
+      enterAs(pinTarget.id);
     } else {
       pinMode='setup'; pinFirstEntry='';
       pinError("PINs didn't match, start over");
     }
   }
-}
-
-function unlockSuccess(){
-  pinEntry='';
-  updatePinDots();
-  hideLock();
 }
 
 function pinError(msg){
@@ -1551,40 +1774,94 @@ function pinError(msg){
   updatePinDots();
 }
 
-function lockApp(){
-  if(!getStoredPin()){
-    // no PIN yet — go through setup
-    showLock();
-    return;
-  }
-  showLock();
-}
-
+// Kids ask a parent. A parent proves it's them with the device's KidQuest password
+// (on this-device-only mode there is none, so it just asks to confirm).
 function forgotPin(){
-  if(confirm('Reset your PIN? This will clear the saved PIN so you can create a new one. Your kids\u2019 stars and charts stay safe.')){
-    localStorage.removeItem('kq_pin');
-    showToast('PIN cleared — create a new one');
-    showLock();
+  if(!pinTarget) return;
+  if(pinTarget.type==='kid'){ setLockText(pinTarget.emoji, pinTarget.name, 'Ask Mum or Dad to reset your PIN', true); return; }
+  if(store.kind==='firebase'){
+    document.getElementById('pinPad').style.display='none';
+    document.getElementById('pinForgot').style.display='none';
+    document.getElementById('pwRow').style.display='block';
+    document.getElementById('pwInput').value='';
+    setLockText('🔑', pinTarget.name, 'Enter the KidQuest password this device signed in with');
+    document.getElementById('pwInput').focus();
+  } else if(confirm('Reset your PIN? Your kids’ stars and charts stay safe.')){
+    startNewPin();
+  }
+}
+
+async function submitPassword(){
+  const pw=document.getElementById('pwInput').value;
+  if(!pw) return;
+  try{
+    await store.verifyPassword(pw);
+    document.getElementById('pwInput').value='';
+    startNewPin();
+  }catch(e){
+    setLockText('🔑', pinTarget.name, e.code==='auth/network-request-failed'?'No internet — try again when online':'Wrong password', true);
+  }
+}
+
+function startNewPin(){
+  document.getElementById('pwRow').style.display='none';
+  document.getElementById('pinPad').style.display='';
+  pinMode='setup'; pinEntry=''; pinFirstEntry='';
+  setLockText('🆕','New PIN',`Choose a new 4-digit PIN for ${pinTarget.name}`);
+  updatePinDots();
+}
+
+// Kids see their own screen: no giving stars, no editing, no alarms
+function applyRole(){
+  const kid=!isParent();
+  document.body.classList.toggle('role-kid',kid);
+  const who=currentWho && PROFILES[currentWho.id];
+  document.getElementById('whoChip').textContent = who ? `${who.emoji} ${who.name}` : '👤';
+  const active=document.querySelector('.tab-btn.active');
+  if(kid && active?.classList.contains('parent-only')) switchTab('leaderboard',document.querySelector('.tab-btn'));
+}
+
+function onProfilesChanged(){
+  if(currentWho && !PROFILES[currentWho.id]){ showWho(); return; }
+  if(currentWho) currentWho.type=PROFILES[currentWho.id].type;
+  if(document.getElementById('lockScreen').classList.contains('show') && !pinTarget) renderWhoGrid();
+}
+
+// ═══════════════════════════════════════
+//  DEVICE SETUP  (a parent signs this device in once)
+// ═══════════════════════════════════════
+function showDeviceSetup(){
+  document.getElementById('dsName').value = lsGet('kq_device_name') || '';
+  document.getElementById('deviceSetup').classList.add('show');
+}
+
+async function deviceSignIn(){
+  const email=document.getElementById('dsEmail').value.trim();
+  const pw=document.getElementById('dsPassword').value;
+  const name=document.getElementById('dsName').value.trim();
+  const err=document.getElementById('dsError');
+  if(!email||!pw||!name){ err.textContent='Please fill in all three boxes'; return; }
+  const btn=document.getElementById('dsBtn');
+  btn.disabled=true; btn.textContent='Signing in…'; err.textContent='';
+  try{
+    await store.signIn(email,pw);
+    lsSet('kq_device_name',name);
+    document.getElementById('dsPassword').value='';
+    document.getElementById('deviceSetup').classList.remove('show');
+    startApp();
+  }catch(e){
+    err.textContent = e.code==='auth/network-request-failed' ? 'No internet connection'
+      : e.code==='auth/too-many-requests' ? 'Too many tries — wait a few minutes'
+      : 'Wrong email or password';
+  }finally{
+    btn.disabled=false; btn.textContent='Sign in';
   }
 }
 
 // ═══════════════════════════════════════
-//  FAMILY SETUP  (splash → onboarding → app)
+//  FAMILY SETUP  (splash → onboarding → who's here)
 // ═══════════════════════════════════════
-function initFamily(savedKids){
-  KIDS = enrichKids(savedKids);
-  timers = KIDS.map(newTimerState);
-  alarms = loadAlarms();
-  chart  = loadChart();
-  chartKid = 0;
-  renderKidsStrip();
-  renderLeaderboard();
-  renderChartKidTabs();
-  renderChart();
-  renderTimers();
-  renderAlarms();
-  renderStories();
-}
+const PIN_RE=/^\d{4}$/;
 
 // ── splash ──
 function showSplash(){ document.getElementById('splash').classList.add('show'); }
@@ -1592,169 +1869,222 @@ function hideSplash(){ document.getElementById('splash').classList.remove('show'
 
 // ── onboarding ──
 let onbCount = 3;
+let obKids = [];
 function showOnboarding(){
   onbCount = 3;
   document.getElementById('obCount').textContent = onbCount;
+  document.getElementById('obParentInputs').innerHTML='';
   goOnbStep(1);
   document.getElementById('onboarding').classList.add('show');
 }
 function hideOnboarding(){ document.getElementById('onboarding').classList.remove('show'); }
 function goOnbStep(n){
-  document.getElementById('obStep1').style.display = n===1?'block':'none';
-  document.getElementById('obStep2').style.display = n===2?'block':'none';
+  [1,2,3].forEach(i=>{ document.getElementById('obStep'+i).style.display = n===i?'block':'none'; });
 }
 function obChangeCount(delta){
   onbCount = Math.max(1, Math.min(10, onbCount+delta));
   document.getElementById('obCount').textContent = onbCount;
 }
 function obNext(){
-  // build name+age inputs
+  // build name + age + PIN inputs
   const wrap=document.getElementById('obKidInputs');
   wrap.innerHTML='';
   for(let i=0;i<onbCount;i++){
-    const emoji=EMOJI_POOL[i%EMOJI_POOL.length];
     wrap.innerHTML += `
       <div class="ob-kid-row">
-        <div class="ob-kid-emoji">${emoji}</div>
+        <div class="ob-kid-emoji">${EMOJI_POOL[i%EMOJI_POOL.length]}</div>
         <input class="ob-input ob-name" type="text" placeholder="Kid ${i+1}'s name" maxlength="20" autocomplete="off">
         <input class="ob-input ob-age" type="number" placeholder="Age" min="1" max="17" inputmode="numeric">
+        <input class="ob-input ob-pin" type="password" placeholder="PIN" maxlength="4" inputmode="numeric" autocomplete="off">
       </div>`;
   }
   goOnbStep(2);
 }
-function obStart(){
-  const names=[...document.querySelectorAll('#obKidInputs .ob-name')];
-  const ages =[...document.querySelectorAll('#obKidInputs .ob-age')];
+function cleanAge(v){ let age=parseInt(v,10); if(isNaN(age)||age<1) age=5; return Math.min(age,17); }
+function obKidsNext(){
+  const rows=[...document.querySelectorAll('#obKidInputs .ob-kid-row')];
   const list=[];
-  for(let i=0;i<names.length;i++){
-    const nm=names[i].value.trim();
-    if(!nm){ showToast('Please enter a name for every kid'); names[i].focus(); return; }
-    let age=parseInt(ages[i].value,10);
-    if(isNaN(age)||age<1) age=5;
-    if(age>17) age=17;
-    list.push({ name:nm, age:age });
+  for(const r of rows){
+    const name=r.querySelector('.ob-name'), pin=r.querySelector('.ob-pin');
+    if(!name.value.trim()){ showToast('Please enter a name for every kid'); name.focus(); return; }
+    if(!PIN_RE.test(pin.value)){ showToast('Each kid needs a 4-digit PIN'); pin.focus(); return; }
+    list.push({ name:name.value.trim(), age:cleanAge(r.querySelector('.ob-age').value), pin:pin.value });
   }
-  saveKids(list);
-  // fresh per-family state
-  localStorage.removeItem('kq_alarms');
-  localStorage.removeItem('kq_chart');
-  bonusLog=[]; saveBonus(); // bonus entries are keyed by kid position, so they can't carry over
+  obKids=list;
+  const wrap=document.getElementById('obParentInputs');
+  if(!wrap.children.length){
+    wrap.innerHTML=['Mum','Dad'].map((n,i)=>`
+      <div class="ob-kid-row">
+        <div class="ob-kid-emoji">${PARENT_EMOJI[i]}</div>
+        <input class="ob-input ob-name" type="text" value="${n}" maxlength="20" autocomplete="off">
+        <input class="ob-input ob-pin" type="password" placeholder="PIN" maxlength="4" inputmode="numeric" autocomplete="off">
+      </div>`).join('');
+  }
+  goOnbStep(3);
+}
+async function obFinish(){
+  const rows=[...document.querySelectorAll('#obParentInputs .ob-kid-row')];
+  const parents=[];
+  for(const r of rows){
+    const name=r.querySelector('.ob-name'), pin=r.querySelector('.ob-pin');
+    if(!name.value.trim()) continue; // second parent is optional
+    if(!PIN_RE.test(pin.value)){ showToast(`${name.value.trim()} needs a 4-digit PIN`); pin.focus(); return; }
+    parents.push({ name:name.value.trim(), pin:pin.value, i:rows.indexOf(r) });
+  }
+  if(!parents.length){ showToast('At least one parent is needed'); return; }
+  let firstParent=null;
+  for(const [i,k] of obKids.entries()){
+    const id=newId();
+    store.put('profiles',id,{ type:'kid', name:k.name, age:k.age, emoji:EMOJI_POOL[i%EMOJI_POOL.length], color:COLOR_POOL[i%COLOR_POOL.length], order:i, pinHash:await hashPin(id,k.pin) },false);
+  }
+  for(const p of parents){
+    const id=newId(); firstParent=firstParent||id;
+    store.put('profiles',id,{ type:'parent', name:p.name, emoji:PARENT_EMOJI[p.i], color:PARENT_COLOR[p.i], order:100+p.i, pinHash:await hashPin(id,p.pin) },false);
+  }
   hideOnboarding();
-  initFamily(list);
-  showToast('🎉 Family saved! Set a parent PIN next.');
-  showLock(); // first launch → PIN setup
+  showToast('🎉 Family saved!');
+  // wait for the new profiles to arrive from the store, then go straight in as the parent
+  const go=()=>{ if(PROFILES[firstParent]) enterAs(firstParent); else setTimeout(go,100); };
+  go();
 }
 
 // ═══════════════════════════════════════
-//  EDIT KIDS  (rename, re-age, add, remove)
+//  EDIT FAMILY  (kids, parents, PINs, this device's name)
 // ═══════════════════════════════════════
-// Each row remembers which existing kid it came from (orig) so stars, chart,
-// alarm and timers follow the kid when others are removed. orig=null → new kid.
+// Rows keep their profile id (null = new), so stars and charts stay with each person.
 const MAX_KIDS = 10;
-let ekRows = [];
+let ekKids = [], ekParents = [];
 
 function openEditKids(){
-  ekRows = KIDS.map((k,i)=>({ orig:i, name:k.name, age:k.age, emoji:k.emoji, color:k.color }));
+  if(!isParent()) return;
+  ekKids    = KIDS.map(k=>({ id:k.id, name:k.name, age:k.age, emoji:k.emoji, color:k.color, pin:'' }));
+  ekParents = PARENTS.map(p=>({ id:p.id, name:p.name, emoji:p.emoji, color:p.color, pin:'' }));
+  document.getElementById('ekDevice').value = lsGet('kq_device_name') || '';
   renderEditRows();
   document.getElementById('editKids').classList.add('show');
 }
 function closeEditKids(){ document.getElementById('editKids').classList.remove('show'); }
 
-function renderEditRows(){
-  const wrap=document.getElementById('ekKidInputs');
-  wrap.innerHTML = ekRows.map((r,i)=>`
+function ekRowHtml(list,r,i){
+  const isKid=list==='ekKids';
+  return `
     <div class="ob-kid-row">
       <div class="ob-kid-emoji">${r.emoji}</div>
-      <input class="ob-input ob-name" type="text" placeholder="Kid's name" maxlength="20" autocomplete="off"
-        oninput="ekRows[${i}].name=this.value">
-      <input class="ob-input ob-age" type="number" placeholder="Age" min="1" max="17" inputmode="numeric"
-        oninput="ekRows[${i}].age=this.value">
-      <button class="ob-del" onclick="ekRemoveRow(${i})" title="Remove" ${ekRows.length<=1?'disabled':''}>✕</button>
-    </div>`).join('');
+      <input class="ob-input ob-name" type="text" placeholder="Name" maxlength="20" autocomplete="off"
+        oninput="${list}[${i}].name=this.value">
+      ${isKid?`<input class="ob-input ob-age" type="number" placeholder="Age" min="1" max="17" inputmode="numeric"
+        oninput="${list}[${i}].age=this.value">`:''}
+      <input class="ob-input ob-pin" type="password" placeholder="${r.id?'New PIN':'PIN'}" maxlength="4" inputmode="numeric" autocomplete="off"
+        oninput="${list}[${i}].pin=this.value">
+      <button class="ob-del" onclick="ekRemoveRow('${list}',${i})" title="Remove" ${(isKid?ekKids:ekParents).length<=1?'disabled':''}>✕</button>
+    </div>`;
+}
+
+function renderEditRows(){
+  const kw=document.getElementById('ekKidInputs'), pw=document.getElementById('ekParentInputs');
+  kw.innerHTML = ekKids.map((r,i)=>ekRowHtml('ekKids',r,i)).join('');
+  pw.innerHTML = ekParents.map((r,i)=>ekRowHtml('ekParents',r,i)).join('');
   // set values via DOM so names never need HTML-escaping in the template
-  wrap.querySelectorAll('.ob-name').forEach((el,i)=>el.value=ekRows[i].name);
-  wrap.querySelectorAll('.ob-age').forEach((el,i)=>el.value=ekRows[i].age);
-  document.getElementById('ekAddBtn').disabled = ekRows.length>=MAX_KIDS;
+  kw.querySelectorAll('.ob-name').forEach((el,i)=>el.value=ekKids[i].name);
+  kw.querySelectorAll('.ob-age').forEach((el,i)=>el.value=ekKids[i].age);
+  pw.querySelectorAll('.ob-name').forEach((el,i)=>el.value=ekParents[i].name);
+  kw.querySelectorAll('.ob-pin').forEach((el,i)=>el.value=ekKids[i].pin);
+  pw.querySelectorAll('.ob-pin').forEach((el,i)=>el.value=ekParents[i].pin);
+  document.getElementById('ekAddBtn').disabled = ekKids.length>=MAX_KIDS;
 }
 
 function ekAddRow(){
-  if(ekRows.length>=MAX_KIDS) return;
-  const p=freePoolIdx(ekRows.map(r=>r.emoji));
-  ekRows.push({ orig:null, name:'', age:'', emoji:EMOJI_POOL[p], color:COLOR_POOL[p] });
+  if(ekKids.length>=MAX_KIDS) return;
+  const p=freePoolIdx(ekKids.map(r=>r.emoji));
+  ekKids.push({ id:null, name:'', age:'', emoji:EMOJI_POOL[p], color:COLOR_POOL[p], pin:'' });
   renderEditRows();
   const names=document.querySelectorAll('#ekKidInputs .ob-name');
   names[names.length-1].focus();
 }
 
-function ekRemoveRow(i){
-  if(ekRows.length<=1) return;
-  const r=ekRows[i];
-  if(r.orig!==null && !confirm(`Remove ${r.name||'this kid'}? Their stars, chart and alarm will be deleted when you save.`)) return;
-  ekRows.splice(i,1);
+function ekRemoveRow(list,i){
+  const rows = list==='ekKids' ? ekKids : ekParents;
+  if(rows.length<=1) return;
+  const r=rows[i];
+  if(r.id && !confirm(`Remove ${r.name||'this person'}? ${list==='ekKids'?'Their stars, chart and alarm will be deleted when you save.':'They will no longer be able to open the parent screens.'}`)) return;
+  rows.splice(i,1);
   renderEditRows();
 }
 
-function saveEditKids(){
-  const names=document.querySelectorAll('#ekKidInputs .ob-name');
-  for(let i=0;i<ekRows.length;i++){
-    if(!String(ekRows[i].name).trim()){ showToast('Please enter a name for every kid'); names[i].focus(); return; }
-  }
-  // old kid index → new kid index (removed kids are absent)
-  const map={};
-  ekRows.forEach((r,ni)=>{ if(r.orig!==null) map[r.orig]=ni; });
-
-  // pause running timers; they restart under their new index after re-render
-  const restart=[];
-  timers.forEach((t,oi)=>['meal','tv'].forEach(type=>{
-    if(t[type].running){
-      clearInterval(t[type].interval); t[type].running=false;
-      if(oi in map) restart.push([map[oi],type]);
+async function saveEditKids(){
+  for(const [rows,sel] of [[ekKids,'#ekKidInputs'],[ekParents,'#ekParentInputs']]){
+    const names=document.querySelectorAll(sel+' .ob-name'), pins=document.querySelectorAll(sel+' .ob-pin');
+    for(let i=0;i<rows.length;i++){
+      if(!String(rows[i].name).trim()){ showToast('Please enter a name for everyone'); names[i].focus(); return; }
+      if((rows[i].pin || !rows[i].id) && !PIN_RE.test(rows[i].pin)){ showToast(`${rows[i].name.trim()} needs a 4-digit PIN`); pins[i].focus(); return; }
     }
-  }));
-
-  KIDS = ekRows.map(r=>{
-    let age=parseInt(r.age,10);
-    if(isNaN(age)||age<1) age=5;
-    if(age>17) age=17;
-    return { name:String(r.name).trim(), age, emoji:r.emoji, color:r.color };
-  });
-  alarms = ekRows.map(r=> r.orig!==null ? alarms[r.orig] : {time:'07:00',on:false});
-  chart  = ekRows.map(r=> r.orig!==null ? chart[r.orig]  : BEHAVIORS.map(()=>DAYS.map(()=>'')));
-  timers = ekRows.map(r=> r.orig!==null ? timers[r.orig] : newTimerState());
-  bonusLog = bonusLog.filter(e=>e.k in map).map(e=>({...e, k:map[e.k]}));
-  ringQueue = ringQueue.filter(k=>k in map).map(k=>map[k]);
-  if(ringingKidIdx>=0) ringingKidIdx = ringingKidIdx in map ? map[ringingKidIdx] : -1;
-  chartKid = chartKid in map ? map[chartKid] : 0;
-
-  saveKids(KIDS); saveAlarms(alarms); saveChart(); saveBonus();
-  renderKidsStrip(); renderLeaderboard(); renderChartKidTabs(); renderChart();
-  renderTimers(); renderAlarms();
-  restart.forEach(([ki,type])=>startTimer(ki,type));
-
+  }
+  const keep=new Set();
+  for(const [i,r] of ekKids.entries()){
+    const id=r.id||newId(); keep.add(id);
+    const data={ type:'kid', name:r.name.trim(), age:cleanAge(r.age), emoji:r.emoji, color:r.color, order:i };
+    if(r.pin) data.pinHash=await hashPin(id,r.pin);
+    store.put('profiles',id,data);
+  }
+  for(const [i,r] of ekParents.entries()){
+    const id=r.id||newId(); keep.add(id);
+    const data={ type:'parent', name:r.name.trim(), emoji:r.emoji, color:r.color, order:100+i };
+    if(r.pin) data.pinHash=await hashPin(id,r.pin);
+    store.put('profiles',id,data);
+  }
+  // removed people: drop their profile and live timer/alarm (old stars just stop showing)
+  for(const id in PROFILES){
+    if(keep.has(id)) continue;
+    store.remove('profiles',id); store.remove('timers',id); store.remove('alarms',id);
+  }
+  const dev=document.getElementById('ekDevice').value.trim();
+  if(dev){ lsSet('kq_device_name',dev); registerDevice(); }
   closeEditKids();
-  showToast('✅ Kids updated');
+  showToast('✅ Family updated');
 }
 
 // ═══════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════
-function boot(){
-  renderStories(); // stories don't depend on kids
+function startApp(){
+  registerDevice();
   showSplash();
-  setTimeout(()=>{
+  startWatches(()=>{
     hideSplash();
-    const kids=loadKids();
-    if(kids){
-      initFamily(kids);
-      showLock();           // returning family → PIN unlock
-    } else {
-      showOnboarding();     // brand-new family → setup
-    }
-  }, 1900);
+    if(!KIDS.length && !PARENTS.length){ showOnboarding(); return; }
+    const saved=ssGet('kq_who');
+    if(saved && PROFILES[saved]){ currentWho={ id:saved, type:PROFILES[saved].type }; renderAll(); }
+    else showWho();
+  });
 }
 
-// alarm tick — check every second (safe even before family is set)
-alarmCheckInterval=setInterval(checkAlarms,1000);
+async function boot(){
+  renderStories(); // stories don't depend on kids
+  showSplash();
+  const minSplash=new Promise(r=>setTimeout(r,1200));
+  try{
+    store = FB_CONFIG ? await makeFirebaseStore() : makeLocalStore();
+  }catch(e){
+    console.error(e);
+    await minSplash;
+    document.querySelector('.splash-tag').textContent="Can't reach KidQuest. Check the internet and reload.";
+    document.querySelector('.splash-dots').style.display='none';
+    return;
+  }
+  await minSplash;
+  if(store.kind==='firebase' && !(await store.currentUser())){ hideSplash(); showDeviceSetup(); return; }
+  startApp();
+}
+
+// timers, alarms and the weekly rollover all run off one clock
+setInterval(()=>{
+  if(!store || !KIDS.length) return; // wait until the family has loaded
+  timerTick(); checkAlarms(); checkWeekRollover();
+},500);
+
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('sw',e)));
+}
 
 boot();
 </script>
