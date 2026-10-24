@@ -405,6 +405,9 @@ body{
 .sk-x{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 6px;}
 .sk-timer{font-family:'Fredoka One',cursive;font-size:14px;}
 .sk-empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);padding:6px 4px;}
+.audio-toggle{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;background:var(--card);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--r-sm);padding:12px 14px;margin:0 4px 16px;cursor:pointer;font-size:14px;font-weight:700;}
+.audio-toggle input{width:22px;height:22px;accent-color:var(--green);cursor:pointer;flex-shrink:0;}
+.audio-toggle small{flex-basis:100%;padding-left:32px;font-size:11px;color:var(--muted);font-weight:600;}
 .sk-tpls{display:flex;flex-direction:column;gap:8px;width:100%;}
 .sk-tpl{text-align:left;padding:12px 14px;border-radius:var(--r-sm);border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:var(--text);font-family:'Quicksand',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 .sk-tpl:hover,.sk-tpl:focus{border-color:var(--kc,var(--gold));outline:none;}
@@ -774,6 +777,11 @@ body:not(.role-kid) .kid-only{display:none!important;}
 <!-- TIMERS PANEL -->
 <div class="panel" id="panel-timers">
   <div class="sec-label">Tap ▶ to start · ⏸ to pause · ↺ to reset</div>
+  <label class="audio-toggle">
+    <input type="checkbox" id="timerAudio" onchange="setTimerAudio(this.checked)">
+    <span>🔊 Audio reminders on this device</span>
+    <small>Tick only on the device next to the kids</small>
+  </label>
   <div id="timersContainer"></div>
   <div style="height:20px"></div>
 </div>
@@ -1350,14 +1358,24 @@ function resetTimerDo(kid,type){
   showToast(`${kidById(kid)?.name||''}'s ${type} timer reset`);
 }
 
-// Only the device that started a timer speaks, so the whole house doesn't talk at once
+// Timer reminders are spoken only on devices where "Audio reminders" is ticked
+// (e.g. the one next to the kids), so the whole house doesn't talk at once.
+// It's a per-device setting and starts unticked.
+function timerAudioOn(){ return lsGet('kq_timer_audio')==='1'; }
+function setTimerAudio(on){
+  lsSet('kq_timer_audio', on?'1':'0');
+  // speaking here also unlocks speech for later reminders on browsers that need a tap first
+  if(on) speak('Timer reminders are on for this device.');
+  showToast(on?'🔊 Timer reminders on for this device':'🔇 Timer reminders off for this device');
+}
+
 const lastSecs={};
 function timerTick(){
   updateTimerDisplays();
   KIDS.forEach(k=>['meal','tv'].forEach(type=>{
     const key=k.id+'_'+type, s=timerState(k.id,type), prev=lastSecs[key];
     lastSecs[key]=s.secs;
-    if(prev==null || s.secs>=prev || s.by!==DEVICE_ID || !TIMERS[k.id]?.[type]?.endsAt) return;
+    if(prev==null || s.secs>=prev || !timerAudioOn() || !TIMERS[k.id]?.[type]?.endsAt) return;
     if(prev-s.secs<=3){ for(let x=prev-1;x>=s.secs;x--) onTick(k.id,type,x); }
     else if(s.secs===0) onTick(k.id,type,0); // woke up after the end: still say time's up
   }));
@@ -2506,6 +2524,7 @@ function startApp(){
 
 async function boot(){
   renderStories(); // stories don't depend on kids
+  document.getElementById('timerAudio').checked=timerAudioOn();
   showSplash();
   const minSplash=new Promise(r=>setTimeout(r,1200));
   try{
