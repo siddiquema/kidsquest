@@ -13,6 +13,7 @@
   --card:    #1a2f47;
   --card-hi: #1f3a58;
   --gold:    #ffd166;
+  --silver:  #cbd5e1;
   --green:   #06d6a0;
   --meal:    #ff6b6b;
   --meal-bg: #2d0f0f;
@@ -359,6 +360,11 @@ body{
 
 .onb-next{width:100%;padding:16px;border:none;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--gold),#f4a261);color:#1a1205;font-family:'Fredoka One',cursive;font-size:18px;cursor:pointer;box-shadow:0 6px 20px rgba(255,209,102,.35);transition:transform .15s;}
 .onb-next:active{transform:scale(.97);}
+.ob-del{width:38px;height:38px;flex-shrink:0;border-radius:50%;border:1.5px solid rgba(255,107,107,.3);background:transparent;color:var(--meal);font-size:16px;cursor:pointer;}
+.ob-del:disabled{opacity:.3;pointer-events:none;}
+.onb-add{width:100%;padding:12px;margin-bottom:14px;border:1.5px dashed rgba(255,255,255,.18);border-radius:var(--r-sm);background:transparent;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.onb-add:disabled{opacity:.35;pointer-events:none;}
+.header-btns{display:flex;gap:10px;}
 .onb-back{margin-top:14px;background:none;border:none;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 
 /* ═══════════════════════════════════════
@@ -515,6 +521,19 @@ body{
   </div>
 </div>
 
+<!-- ═══════ EDIT KIDS ═══════ -->
+<div class="onboarding" id="editKids">
+  <div class="onb-inner">
+    <div class="onb-emoji">✏️</div>
+    <div class="onb-title">Edit your kids</div>
+    <div class="onb-sub">Change names and ages, add a kid, or remove one. Stars and charts stay with each kid.</div>
+    <div class="ob-kid-list" id="ekKidInputs"></div>
+    <button class="onb-add" id="ekAddBtn" onclick="ekAddRow()">＋ Add a kid</button>
+    <button class="onb-next" onclick="saveEditKids()">Save changes</button>
+    <button class="onb-back" onclick="closeEditKids()">Cancel</button>
+  </div>
+</div>
+
 <!-- ═══════ PARENT LOCK SCREEN ═══════ -->
 <div class="lock-screen" id="lockScreen">
   <div class="lock-inner">
@@ -557,7 +576,10 @@ body{
     <div class="app-logo">KidQuest ✨</div>
     <div class="app-tagline">Family adventure tracker</div>
   </div>
-  <button class="lock-app-btn" onclick="lockApp()" title="Lock app">🔒</button>
+  <div class="header-btns">
+    <button class="lock-app-btn" onclick="openEditKids()" title="Edit kids">✏️</button>
+    <button class="lock-app-btn" onclick="lockApp()" title="Lock app">🔒</button>
+  </div>
 </div>
 
 <!-- KIDS STRIP -->
@@ -589,7 +611,7 @@ body{
   <div class="chart-kid-tabs" id="chartKidTabs"></div>
   <div class="chart-legend">
     <span class="leg"><span class="leg-ic">🥇</span> Gold</span>
-    <span class="leg"><span class="leg-ic">🥈</span> Silver</span>
+    <span class="leg"><span class="leg-ic">🥈</span> Silver (½)</span>
     <span class="leg"><span class="leg-ic" style="color:var(--muted)">—</span> None</span>
     <span class="leg-hint">Tap a cell to change</span>
   </div>
@@ -675,9 +697,15 @@ function loadKids(){
   }catch{}
   return null;
 }
-function saveKids(list){ localStorage.setItem('kq_kids', JSON.stringify(list)); }
+function saveKids(list){ localStorage.setItem('kq_kids', JSON.stringify(list.map(k=>({name:k.name, age:k.age, emoji:k.emoji, color:k.color})))); }
+// Keep each kid's saved emoji/colour so removing a kid doesn't reshuffle the others
 function enrichKids(list){
-  return list.map((k,i)=>({ name:k.name, age:k.age, emoji:EMOJI_POOL[i%EMOJI_POOL.length], color:COLOR_POOL[i%COLOR_POOL.length] }));
+  return list.map((k,i)=>({ name:k.name, age:k.age, emoji:k.emoji||EMOJI_POOL[i%EMOJI_POOL.length], color:k.color||COLOR_POOL[i%COLOR_POOL.length] }));
+}
+// First pool slot not used by any current kid (for newly added kids)
+function freePoolIdx(used){
+  const i=EMOJI_POOL.findIndex(e=>!used.includes(e));
+  return i<0 ? used.length%EMOJI_POOL.length : i;
 }
 
 // KIDS starts empty; populated by initFamily() once a profile exists
@@ -876,8 +904,12 @@ function chartGoldWeek(idx){ let c=0; chart[idx].forEach(r=>r.forEach(v=>{ if(v=
 function chartSilverWeek(idx){ let c=0; chart[idx].forEach(r=>r.forEach(v=>{ if(v==='silver') c++; })); return c; }
 
 // ── combined totals per kid (bonus stars + chart stars) ──
-function kidStarsToday(idx){ return todayPts(idx) + chartGoldToday(idx) + chartSilverToday(idx); }
-function kidStarsWeek(idx){ return weekPts(idx) + chartGoldWeek(idx) + chartSilverWeek(idx); }
+// Gold = 1 star, silver = ½ star (partly done), bonus = face value
+const SILVER_VALUE = 0.5;
+function chartStars(gold,silver){ return gold + silver*SILVER_VALUE; }
+function kidStarsToday(idx){ return todayPts(idx) + chartStars(chartGoldToday(idx), chartSilverToday(idx)); }
+function kidStarsWeek(idx){ return weekPts(idx) + chartStars(chartGoldWeek(idx), chartSilverWeek(idx)); }
+function fmtStars(n){ const w=Math.floor(n); return n===w ? String(w) : (w?w:'')+'½'; }
 
 function renderLeaderboard(){
   // grand totals across all kids
@@ -886,8 +918,8 @@ function renderLeaderboard(){
     goldT+=chartGoldToday(i); silverT+=chartSilverToday(i); bonusT+=todayPts(i);
     goldW+=chartGoldWeek(i);  silverW+=chartSilverWeek(i);  bonusW+=weekPts(i);
   });
-  const tToday=goldT+silverT+bonusT;
-  const tWeek =goldW+silverW+bonusW;
+  const tToday=chartStars(goldT,silverT)+bonusT;
+  const tWeek =chartStars(goldW,silverW)+bonusW;
 
   const dayLeader  = KIDS.map((k,i)=>({k,p:kidStarsToday(i)})).sort((a,b)=>b.p-a.p)[0];
   const weekLeader = KIDS.map((k,i)=>({k,p:kidStarsWeek(i)})).sort((a,b)=>b.p-a.p)[0];
@@ -896,14 +928,14 @@ function renderLeaderboard(){
   document.getElementById('dashSummary').innerHTML = `
     <div class="ds-card day">
       <div class="ds-label">Today</div>
-      <div class="ds-num">${tToday}</div>
+      <div class="ds-num">${fmtStars(tToday)}</div>
       <div class="ds-unit">stars</div>
       <div class="ds-break">🥇 ${goldT} &nbsp; 🥈 ${silverT} &nbsp; ➕ ${bonusT}</div>
       <div class="ds-leader">${tToday>0?'⭐ '+dayLeader.k.name+' in front':'No stars yet today'}</div>
     </div>
     <div class="ds-card week">
       <div class="ds-label">This Week</div>
-      <div class="ds-num">${tWeek}</div>
+      <div class="ds-num">${fmtStars(tWeek)}</div>
       <div class="ds-unit">stars</div>
       <div class="ds-break">🥇 ${goldW} &nbsp; 🥈 ${silverW} &nbsp; ➕ ${bonusW}</div>
       <div class="ds-leader">${tWeek>0?'🏆 '+weekLeader.k.name+' leading':'Fresh week!'}</div>
@@ -920,8 +952,8 @@ function renderLeaderboard(){
         <div class="lb-age">${k.age} years old</div>
       </div>
       <div class="lb-stats">
-        <div class="lb-stat day"><div class="v" id="dv-${k.i}">${k.day}</div><div class="l">Today</div></div>
-        <div class="lb-stat week"><div class="v" id="wv-${k.i}">${k.week}</div><div class="l">Week</div></div>
+        <div class="lb-stat day"><div class="v" id="dv-${k.i}">${fmtStars(k.day)}</div><div class="l">Today</div></div>
+        <div class="lb-stat week"><div class="v" id="wv-${k.i}">${fmtStars(k.week)}</div><div class="l">Week</div></div>
       </div>
       <button class="plus-btn" onclick="openBonus(${k.i})" title="Add bonus stars">+</button>
     </div>`).join('');
@@ -957,6 +989,31 @@ function resetPoints(){
 // ═══════════════════════════════════════
 //  TIMERS
 // ═══════════════════════════════════════
+function newTimerState(){
+  return {
+    meal:{ secs:MEAL_SECS, running:false, interval:null },
+    tv:  { secs:TV_SECS,   running:false, interval:null },
+  };
+}
+
+// Renders from current timer state, so re-rendering (e.g. after renaming a kid)
+// keeps running timers showing the right time and button
+function timerBoxHtml(i,type){
+  const t=timers[i][type], full=type==='meal'?MEAL_SECS:TV_SECS;
+  const label=t.running?'⏸ Pause':(t.secs<full&&t.secs>0?'▶ Resume':'▶ Start');
+  const m=Math.floor(t.secs/60), s=t.secs%60;
+  return `
+        <div class="timer-box ${type} ${t.running?'running':''}" id="${type}-box-${i}">
+          <span class="timer-icon">${type==='meal'?'🍽️':'📺'}</span>
+          <div class="timer-type">${type==='meal'?'Meal · 25 min':'TV · 20 min'}</div>
+          <div class="timer-digits ${t.secs<=0?'expired':''}" id="${type}-dig-${i}">${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</div>
+          <div class="timer-controls">
+            <button class="tc-btn tc-start" id="${type}-stbtn-${i}" onclick="toggleTimer(${i},'${type}')">${label}</button>
+            <button class="tc-btn tc-reset" id="${type}-rsbtn-${i}" onclick="resetTimerDo(${i},'${type}')">↺</button>
+          </div>
+        </div>`;
+}
+
 function renderTimers(){
   document.getElementById('timersContainer').innerHTML=KIDS.map((kid,i)=>`
     <div class="kid-block">
@@ -964,25 +1021,7 @@ function renderTimers(){
         <div class="kid-block-avatar" style="--kc:${kid.color};border-color:${kid.color}">${kid.emoji}</div>
         <div class="kid-block-name" style="color:${kid.color}">${kid.name}</div>
       </div>
-      <div class="timers-row">
-        <div class="timer-box meal" id="meal-box-${i}">
-          <span class="timer-icon">🍽️</span>
-          <div class="timer-type">Meal · 25 min</div>
-          <div class="timer-digits" id="meal-dig-${i}">25:00</div>
-          <div class="timer-controls">
-            <button class="tc-btn tc-start" id="meal-stbtn-${i}" onclick="toggleTimer(${i},'meal')">▶ Start</button>
-            <button class="tc-btn tc-reset" id="meal-rsbtn-${i}" onclick="resetTimerDo(${i},'meal')">↺</button>
-          </div>
-        </div>
-        <div class="timer-box tv" id="tv-box-${i}">
-          <span class="timer-icon">📺</span>
-          <div class="timer-type">TV · 20 min</div>
-          <div class="timer-digits" id="tv-dig-${i}">20:00</div>
-          <div class="timer-controls">
-            <button class="tc-btn tc-start" id="tv-stbtn-${i}" onclick="toggleTimer(${i},'tv')">▶ Start</button>
-            <button class="tc-btn tc-reset" id="tv-rsbtn-${i}" onclick="resetTimerDo(${i},'tv')">↺</button>
-          </div>
-        </div>
+      <div class="timers-row">${timerBoxHtml(i,'meal')}${timerBoxHtml(i,'tv')}
       </div>
       ${i<KIDS.length-1?'<div class="divider"></div>':''}
     </div>`).join('');
@@ -1082,14 +1121,18 @@ function toggleAlarm(idx){
   showToast(alarms[idx].on?`⏰ ${KIDS[idx].name}'s alarm is on!`:`${KIDS[idx].name}'s alarm off`);
 }
 
+// Kids whose alarms fired while another was still ringing wait here
+let ringQueue=[];
+let lastAlarmMinute='';
+
 function checkAlarms(){
   const now=new Date();
   const hhmm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const sec=now.getSeconds();
-  if(sec!==0) return; // only trigger at :00
+  if(hhmm===lastAlarmMinute) return; // check each minute once, whatever second we land on
+  lastAlarmMinute=hhmm;
   alarms.forEach((a,i)=>{
-    if(a.on && a.time===hhmm && ringingKidIdx===-1){
-      ringAlarm(i);
+    if(a.on && a.time===hhmm && i!==ringingKidIdx && !ringQueue.includes(i)){
+      if(ringingKidIdx===-1) ringAlarm(i); else ringQueue.push(i);
     }
   });
 }
@@ -1100,7 +1143,7 @@ function ringAlarm(idx){
   document.getElementById('ringEmoji').textContent=kid.emoji;
   document.getElementById('ringName').textContent=`Wake up, ${kid.name}! 🌅`;
   document.getElementById('ringOverlay').classList.add('show');
-  startRingSound();
+  if(!ringAudioCtx) startRingSound();
   // speech after short delay so audio context is warm
   setTimeout(()=>{
     speak(`Wake up ${kid.name}! Good morning! Time to start your wonderful day!`);
@@ -1108,16 +1151,18 @@ function ringAlarm(idx){
 }
 
 function dismissAlarm(){
-  stopRingSound();
   window.speechSynthesis&&window.speechSynthesis.cancel();
-  document.getElementById('ringOverlay').classList.remove('show');
   if(ringingKidIdx>=0){
-    // turn alarm off after firing so it doesn't re-ring next minute
+    // turn alarm off after firing so it doesn't re-ring tomorrow
     alarms[ringingKidIdx].on=false;
     saveAlarms(alarms);
     renderAlarms();
     ringingKidIdx=-1;
   }
+  // next kid in line rings straight away
+  if(ringQueue.length){ ringAlarm(ringQueue.shift()); return; }
+  stopRingSound();
+  document.getElementById('ringOverlay').classList.remove('show');
 }
 
 // ═══════════════════════════════════════
@@ -1267,9 +1312,10 @@ function stopStory(){
 // ═══════════════════════════════════════
 //  SPEECH (short announcements)
 // ═══════════════════════════════════════
+// Announcements are queued, never cancelling — so they don't cut off a story
+// or each other. A story's next sentence is queued after any announcement.
 function speak(text){
   if(!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.lang='en-US'; u.rate=0.95; u.pitch=1.1; u.volume=1;
   const voices=window.speechSynthesis.getVoices();
@@ -1391,7 +1437,7 @@ function renderChartTotals(){
   document.getElementById('chartTotals').innerHTML = `
     <div class="ct-pill">🥇 <span class="ct-big">${gold}</span> gold</div>
     <div class="ct-pill">🥈 <span class="ct-big" style="color:var(--silver)">${silver}</span> silver</div>
-    <div class="ct-pill">⭐ <span class="ct-big" style="color:var(--green)">${gold+silver}</span> stars</div>`;
+    <div class="ct-pill">⭐ <span class="ct-big" style="color:var(--green)">${fmtStars(chartStars(gold,silver))}</span> stars</div>`;
 }
 
 function resetChart(){
@@ -1527,10 +1573,7 @@ function forgotPin(){
 // ═══════════════════════════════════════
 function initFamily(savedKids){
   KIDS = enrichKids(savedKids);
-  timers = KIDS.map(()=>({
-    meal:{ secs:MEAL_SECS, running:false, interval:null },
-    tv:  { secs:TV_SECS,   running:false, interval:null },
-  }));
+  timers = KIDS.map(newTimerState);
   alarms = loadAlarms();
   chart  = loadChart();
   chartKid = 0;
@@ -1580,8 +1623,8 @@ function obNext(){
   goOnbStep(2);
 }
 function obStart(){
-  const names=[...document.querySelectorAll('.ob-name')];
-  const ages =[...document.querySelectorAll('.ob-age')];
+  const names=[...document.querySelectorAll('#obKidInputs .ob-name')];
+  const ages =[...document.querySelectorAll('#obKidInputs .ob-age')];
   const list=[];
   for(let i=0;i<names.length;i++){
     const nm=names[i].value.trim();
@@ -1595,10 +1638,101 @@ function obStart(){
   // fresh per-family state
   localStorage.removeItem('kq_alarms');
   localStorage.removeItem('kq_chart');
+  bonusLog=[]; saveBonus(); // bonus entries are keyed by kid position, so they can't carry over
   hideOnboarding();
   initFamily(list);
   showToast('🎉 Family saved! Set a parent PIN next.');
   showLock(); // first launch → PIN setup
+}
+
+// ═══════════════════════════════════════
+//  EDIT KIDS  (rename, re-age, add, remove)
+// ═══════════════════════════════════════
+// Each row remembers which existing kid it came from (orig) so stars, chart,
+// alarm and timers follow the kid when others are removed. orig=null → new kid.
+const MAX_KIDS = 10;
+let ekRows = [];
+
+function openEditKids(){
+  ekRows = KIDS.map((k,i)=>({ orig:i, name:k.name, age:k.age, emoji:k.emoji, color:k.color }));
+  renderEditRows();
+  document.getElementById('editKids').classList.add('show');
+}
+function closeEditKids(){ document.getElementById('editKids').classList.remove('show'); }
+
+function renderEditRows(){
+  const wrap=document.getElementById('ekKidInputs');
+  wrap.innerHTML = ekRows.map((r,i)=>`
+    <div class="ob-kid-row">
+      <div class="ob-kid-emoji">${r.emoji}</div>
+      <input class="ob-input ob-name" type="text" placeholder="Kid's name" maxlength="20" autocomplete="off"
+        oninput="ekRows[${i}].name=this.value">
+      <input class="ob-input ob-age" type="number" placeholder="Age" min="1" max="17" inputmode="numeric"
+        oninput="ekRows[${i}].age=this.value">
+      <button class="ob-del" onclick="ekRemoveRow(${i})" title="Remove" ${ekRows.length<=1?'disabled':''}>✕</button>
+    </div>`).join('');
+  // set values via DOM so names never need HTML-escaping in the template
+  wrap.querySelectorAll('.ob-name').forEach((el,i)=>el.value=ekRows[i].name);
+  wrap.querySelectorAll('.ob-age').forEach((el,i)=>el.value=ekRows[i].age);
+  document.getElementById('ekAddBtn').disabled = ekRows.length>=MAX_KIDS;
+}
+
+function ekAddRow(){
+  if(ekRows.length>=MAX_KIDS) return;
+  const p=freePoolIdx(ekRows.map(r=>r.emoji));
+  ekRows.push({ orig:null, name:'', age:'', emoji:EMOJI_POOL[p], color:COLOR_POOL[p] });
+  renderEditRows();
+  const names=document.querySelectorAll('#ekKidInputs .ob-name');
+  names[names.length-1].focus();
+}
+
+function ekRemoveRow(i){
+  if(ekRows.length<=1) return;
+  const r=ekRows[i];
+  if(r.orig!==null && !confirm(`Remove ${r.name||'this kid'}? Their stars, chart and alarm will be deleted when you save.`)) return;
+  ekRows.splice(i,1);
+  renderEditRows();
+}
+
+function saveEditKids(){
+  const names=document.querySelectorAll('#ekKidInputs .ob-name');
+  for(let i=0;i<ekRows.length;i++){
+    if(!String(ekRows[i].name).trim()){ showToast('Please enter a name for every kid'); names[i].focus(); return; }
+  }
+  // old kid index → new kid index (removed kids are absent)
+  const map={};
+  ekRows.forEach((r,ni)=>{ if(r.orig!==null) map[r.orig]=ni; });
+
+  // pause running timers; they restart under their new index after re-render
+  const restart=[];
+  timers.forEach((t,oi)=>['meal','tv'].forEach(type=>{
+    if(t[type].running){
+      clearInterval(t[type].interval); t[type].running=false;
+      if(oi in map) restart.push([map[oi],type]);
+    }
+  }));
+
+  KIDS = ekRows.map(r=>{
+    let age=parseInt(r.age,10);
+    if(isNaN(age)||age<1) age=5;
+    if(age>17) age=17;
+    return { name:String(r.name).trim(), age, emoji:r.emoji, color:r.color };
+  });
+  alarms = ekRows.map(r=> r.orig!==null ? alarms[r.orig] : {time:'07:00',on:false});
+  chart  = ekRows.map(r=> r.orig!==null ? chart[r.orig]  : BEHAVIORS.map(()=>DAYS.map(()=>'')));
+  timers = ekRows.map(r=> r.orig!==null ? timers[r.orig] : newTimerState());
+  bonusLog = bonusLog.filter(e=>e.k in map).map(e=>({...e, k:map[e.k]}));
+  ringQueue = ringQueue.filter(k=>k in map).map(k=>map[k]);
+  if(ringingKidIdx>=0) ringingKidIdx = ringingKidIdx in map ? map[ringingKidIdx] : -1;
+  chartKid = chartKid in map ? map[chartKid] : 0;
+
+  saveKids(KIDS); saveAlarms(alarms); saveChart(); saveBonus();
+  renderKidsStrip(); renderLeaderboard(); renderChartKidTabs(); renderChart();
+  renderTimers(); renderAlarms();
+  restart.forEach(([ki,type])=>startTimer(ki,type));
+
+  closeEditKids();
+  showToast('✅ Kids updated');
 }
 
 // ═══════════════════════════════════════
