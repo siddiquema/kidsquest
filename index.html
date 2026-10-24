@@ -405,6 +405,10 @@ body{
 .sk-x{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 6px;}
 .sk-timer{font-family:'Fredoka One',cursive;font-size:14px;}
 .sk-empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);padding:6px 4px;}
+.sk-tpls{display:flex;flex-direction:column;gap:8px;width:100%;}
+.sk-tpl{text-align:left;padding:12px 14px;border-radius:var(--r-sm);border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:var(--text);font-family:'Quicksand',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.sk-tpl:hover,.sk-tpl:focus{border-color:var(--kc,var(--gold));outline:none;}
+.sk-tpl:active{transform:scale(.98);}
 .sk-older{margin-top:8px;}
 .sk-older-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:8px 4px 0;}
 .pe-inner{max-width:520px;text-align:left;}
@@ -1120,6 +1124,9 @@ function scheduleRender(){
   setTimeout(()=>{ renderQueued=false; renderAll(); },16); // batches a burst of sync updates into one redraw
 }
 function renderAll(){
+  // redrawing would close an open dropdown and reset its choice — wait until it's closed
+  const f=document.activeElement;
+  if(f?.tagName==='SELECT' && f.closest('.app-wrapper')){ setTimeout(scheduleRender,500); return; }
   applyRole();
   renderKidsStrip();
   renderBoard();
@@ -1966,10 +1973,10 @@ function renderSkills(){
       return `<div class="sk-card" style="--kc:${k.color}">${head}
         <div class="sk-empty parent-only">
           <div>Choose a starting plan for ${esc(k.name)}:</div>
-          <select class="alarm-device" id="sktpl-${k.id}">
-            ${Object.entries(PLAN_TEMPLATES).map(([key,t])=>`<option value="${key}">${esc(t.label)}</option>`).join('')}
-          </select>
-          <button class="tc-btn tc-start" onclick="assignPlan('${k.id}')">Use this plan</button>
+          <!-- one button per plan: a dropdown here closed itself whenever synced data redrew the tab -->
+          <div class="sk-tpls">
+            ${Object.entries(PLAN_TEMPLATES).map(([key,t])=>`<button class="sk-tpl" onclick="assignPlan('${k.id}','${key}')">${esc(t.label)}</button>`).join('')}
+          </div>
         </div>
         <div class="sk-empty kid-only">No plan yet — ask Mum or Dad.</div>
       </div>`;
@@ -2013,9 +2020,8 @@ function copyTemplate(key){
   const t=PLAN_TEMPLATES[key]||PLAN_TEMPLATES.empty;
   return JSON.parse(JSON.stringify({ template:key, days:t.days, daily:t.daily, topics:t.topics }));
 }
-function assignPlan(kid){
-  if(!isParent()) return;
-  const key=document.getElementById('sktpl-'+kid).value;
+function assignPlan(kid,key){
+  if(!isParent() || !PLAN_TEMPLATES[key]) return;
   store.put('plans',kid,{ ...copyTemplate(key), version:1, updated:Date.now() },false);
   showToast(`🌱 Plan set for ${kidById(kid)?.name}`);
 }
