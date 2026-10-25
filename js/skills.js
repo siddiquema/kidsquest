@@ -168,10 +168,11 @@ function renderSkills(){
       return `
         <div class="sk-row ${log?.status==='approved'?'is-done':''}">
           <div class="sk-emoji">${esc(a.emoji)}</div>
-          <div class="sk-body">
+          <button class="sk-body sk-open" onclick="openSkillHelp('${k.id}','${a.id}')" title="How to do it">
             <div class="sk-title">${esc(a.title)} ${badge}</div>
             <div class="sk-instr">${esc(fillTopics(a.instructions,p.topics))}</div>
-          </div>
+            <div class="sk-how">❓ How do I do it?</div>
+          </button>
           <div class="sk-actions">${action}</div>
         </div>`;
     }).join('') || '<div class="sk-empty">Nothing planned today — enjoy the day! 🌈</div>';
@@ -182,6 +183,58 @@ function renderSkills(){
         <div class="sk-actions"><button class="sk-done" onclick="approveLog('${id}')">Approve</button><button class="sk-x" onclick="undoLog('${id}')">✕</button></div></div>`).join('')}</div>`:'';
     return `<div class="sk-card" style="--kc:${k.color}">${head}${rows}${olderHtml}</div>`;
   }).join('');
+}
+
+// ── help screen: what to do, step by step ──
+// Kids under 7 hear the steps read out as soon as it opens; older kids get the 🔊 button.
+const HELP_AUTO_READ_UNDER = 7;
+let helpOpen=null; // { kid, id }
+
+function helpContent(kid,id){
+  const p=planFor(kid), a=todaysActivities(kid).find(x=>x.id===id);
+  if(!p || !a) return null;
+  const h=helpFor(p,a)||{};
+  const steps=(h.steps?.length ? h.steps : [a.instructions]).map(s=>fillTopics(s,p.topics)).filter(Boolean);
+  return { p, a, steps, examples:h.examples||[], tip:h.tip||'' };
+}
+
+function openSkillHelp(kid,id){
+  const c=helpContent(kid,id); if(!c) return;
+  helpOpen={ kid, id };
+  const {a,steps,examples,tip}=c, k=kidById(kid);
+  const log=logFor(kid,todayKey(),id);
+  const badge=[a.minutes?`${a.minutes} min`:'', a.mode==='together'?'Together':a.mode==='separate'?'Just me':''].filter(Boolean)
+    .map(b=>`<span class="sk-badge">${b}</span>`).join('');
+  document.getElementById('helpBody').innerHTML=`
+    <div class="help-emoji">${esc(a.emoji)}</div>
+    <div class="help-title">${esc(a.title)}</div>
+    <div class="help-badges">${badge}</div>
+    <button class="quiz-say" onclick="readSkillHelp()" title="Read it to me">🔊</button>
+    <ol class="help-steps">${steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+    ${examples.length?`<div class="help-sub">Try these</div><div class="help-examples">${examples.map(e=>`<span>${esc(e)}</span>`).join('')}</div>`:''}
+    ${tip?`<div class="help-tip parent-only">💡 For Mum or Dad: ${esc(tip)}</div>`:''}
+    <div class="help-btns">
+      ${log ? `<div class="help-done">${log.status==='approved'?'✅ Done today — well done!':'✋ Waiting for Mum or Dad to check'}</div>`
+            : `${a.minutes?`<button class="onb-next help-start" onclick="closeSkillHelp();startSkillTimer('${kid}','${id}')">▶ Start ${a.minutes}-minute timer</button>`:''}
+               <button class="sk-done help-donebtn" onclick="closeSkillHelp();markSkillDone('${kid}','${id}')">Done ✓</button>`}
+      <button class="onb-back" onclick="closeSkillHelp()">← Back</button>
+    </div>`;
+  document.getElementById('skillHelp').classList.add('show');
+  if((+k?.age||0) < HELP_AUTO_READ_UNDER) readSkillHelp();
+}
+
+function readSkillHelp(){
+  if(!helpOpen) return;
+  const c=helpContent(helpOpen.kid,helpOpen.id); if(!c) return;
+  if(!activeStoryId) window.speechSynthesis?.cancel(); // stop an earlier read-out, but never a story
+  speak(`${c.a.title}.`);
+  c.steps.forEach((s,i)=>speak(`Step ${i+1}. ${s}`));
+}
+
+function closeSkillHelp(){
+  helpOpen=null;
+  if(!activeStoryId) window.speechSynthesis?.cancel();
+  document.getElementById('skillHelp').classList.remove('show');
 }
 
 function copyTemplate(key){
@@ -233,10 +286,16 @@ function renderPlanEditor(){
         </select>
       </div>
       <textarea class="ob-input pe-instr" rows="2" placeholder="What to do" data-f="instructions" data-i="${i}"></textarea>
+      <textarea class="ob-input pe-instr" rows="3" placeholder="Help steps, one per line (optional — the built-in help is used if empty)" data-f="steps" data-i="${i}"></textarea>
     </div>`).join('') || '<div class="sk-empty">No activities on this day.</div>';
   // fill values through the DOM so text never needs escaping
   box.querySelectorAll('[data-f]').forEach(el=>{
     const a=list[+el.dataset.i], f=el.dataset.f;
+    if(f==='steps'){
+      el.value=(a.steps||[]).join('\n');
+      el.oninput=()=>{ a.steps=el.value.split('\n').map(x=>x.trim()).filter(Boolean); };
+      return;
+    }
     el.value = a[f]==null ? '' : a[f];
     el.oninput=()=>{ a[f] = f==='minutes' ? (el.value===''?null:Math.max(0,parseInt(el.value,10)||0)||null) : el.value; };
   });
