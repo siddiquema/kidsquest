@@ -65,3 +65,50 @@ const TOPIC_FIELDS = [
   ['hindiGrammar','Hindi grammar topic','e.g. vachan (singular/plural)'],
   ['benchmarkSentence','Handwriting check sentence','Same sentence every Sunday'],
 ];
+
+// ═══════════════════════════════════════
+//  HELP  (shown when a kid taps an activity: short steps, examples, a tip for the grown-up)
+// ═══════════════════════════════════════
+// Looked up as `${template}:${id}` first (the twins' plans share ids but differ), then by id.
+// {letterGroup}, {hindiGrammar} and {benchmarkSentence} are filled in from the plan's weekly topics.
+const SKILL_HELP = {
+  'hw-journal': { steps:['Open your 4-line notebook and write today’s date.','Pick one planet fact you like.','Copy it slowly. Sit straight and hold your pencil gently.','Check: do all the letters sit on the line?'],
+                  examples:['Saturn has bright rings.','Mars is called the Red Planet.','Jupiter is the biggest planet.'] },
+  'hi-read':    { steps:['Sit somewhere quiet with your Hindi book.','Read one short paragraph. Point at each word with your finger.','Stop and tell Mum or Dad what happened, in your own words.','Read the next paragraph the same way.'],
+                  tip:'Short bursts are fine — a paragraph, then a chat. Praise the retelling, not just the reading.' },
+  'hw-letters': { steps:['This week’s letters are: {letterGroup}.','Write each letter 5 times, slowly.','Circle your best one of each.','Write one short word that uses them.'] },
+  'te-practice':{ steps:['If it’s a tutor day: go to your Telugu tutor session.','If not: open Google Read Along and choose a Telugu story.','Read out loud. The app listens and helps.','Tell Mum or Dad one new Telugu word you learnt.'] },
+  'hi-grammar': { steps:['This week’s topic is: {hindiGrammar}.','Play with Mum or Dad: one says a word or sentence, the other changes it using the topic.','Take turns. Each right answer is a point!','Try the Hindi grammar quiz in the 🎮 Play tab too.'],
+                  examples:['ladka khelta hai → ladki khelti hai','kitab → kitaben','kamra → kamre'] },
+  'hw-fact':    { steps:['Think of the most interesting thing you learnt this week.','Write it as one sentence in your best handwriting.','Draw a small picture next to it.'] },
+  'teach-back': { steps:['You are the teacher today!','Ask Mum or Dad 3 questions about this week’s Hindi grammar.','Then teach them 3 Telugu words and what they mean.','Give them a star if they get it right!'] },
+  'game-inventor':{ steps:['Find some things at home: cups, blocks, cards, a ball.','Make up a game with them. Decide how you win.','Your game must use Hindi or Telugu words (or {hindiGrammar}).','Write the rules on paper in your best handwriting.','Teach the game to the twins and play it together!'] },
+  'storybook':  { steps:['Open StoryWeaver and choose a Level 1 story in Hindi or Telugu.','Read it out loud, one page at a time.','Tell someone what the story was about.'] },
+  'space-project':{ steps:['Take out your space project.','Add something new: a planet, a label or a drawing.','Write the labels in English, Hindi and Telugu.'] },
+  'typing':     { steps:['Open TypingClub and log in.','Do your next Home Row lesson.','Keep your fingers on the home keys: a s d f and j k l ;','Look at the screen, not your fingers!'] },
+  'hw-benchmark':{ steps:['Write this sentence in your best handwriting:','“{benchmarkSentence}”','Ask Mum or Dad to take a photo of it.','You write the same sentence every Sunday, so you can see yourself getting better!'] },
+
+  'reader:reading': { steps:['Pick a short book you like.','Read it out loud to Mum or Dad.','Close the book and tell the story back: beginning, middle and end.'],
+                      tip:'Ask “what happened next?” rather than correcting every word.' },
+  'early:reading':  { steps:['Do today’s reading step with Mum or Dad.','Then tell them a story, or your plan for the day.','They write it down for you.','Now read your own words back!'],
+                      tip:'Use the current reading-path step: letter sounds, robot talk, sound buttons, tiny sentences, or reading their own words.' },
+  'reader:boost':   { steps:['At bedtime, pick your book.','Read one page out loud.','Say one thing you liked about it.'] },
+  'early:boost':    { steps:['Play robot talk! Mum or Dad talks like a robot, saying each sound: c… a… t','You squash the sounds together and shout the word: “cat!”','Do 5 words.','Then do today’s reading step.'],
+                      examples:['c-a-t → cat','d-o-g → dog','s-u-n → sun','p-i-g → pig','h-a-t → hat','m-a-p → map'],
+                      tip:'Say the sounds (“mmm”, “aaa”, “p”), not the letter names (“em”, “ay”, “pee”).' },
+  'numbers':     { steps:['Pick a game with Mum or Dad.','Chess-piece maths: count the pawns, then add the knights and bishops.','Dice race: roll, count the dots, move that many steps.','Shop game: buy toys with coins and count the change.'] },
+  'chess':       { steps:['Set up the chess puzzle with Mum or Dad.','Find the move that wins straight away: checkmate!','Then play “what moved?”: look at the board, close your eyes, someone moves one piece, and you find it!','You can play What moved? in the 🎮 Play tab too.'] },
+  'life':        { steps:['Pack your own school bag.','Help set the table for dinner.','Feelings talk: say how you felt today and why.','After a game, shake hands and say “good game!”'] },
+  'art':         { steps:['Do this week’s art club step: draw, paint, cut or stick.','Tidy up your art things.','Then 5 minutes of dancing or hopscotch!'] },
+  'family-chess':{ steps:['Set up the chess board together.','Play a game with Mum, Dad or your brother.','Shake hands at the end: “good game!”'] },
+  'outdoor':     { steps:['Go outside with a grown-up.','Run, climb, ride your bike or play ball.','Drink some water when you come back in.'] },
+  'make':        { steps:['Choose what to make: a tower, a car, a card or a drawing.','Collect what you need: blocks, paper, glue, boxes.','Build it together, then show everyone!'] },
+  'story-time':  { steps:['Pick a story book together.','A grown-up reads a page, and you say what you see in the pictures.','Talk about your favourite part.'] },
+  'real-maths':  { steps:['Help with real counting today.','Count the plates and spoons for dinner.','At the shop, find the price and count the coins.','Weigh two fruits and say which is heavier.'] },
+  'buddy':       { steps:['Ask your big brother to play or read with you.','He can teach you a game he made up!','Say thank you when you finish.'] },
+  'own-job':     { steps:['Put your shoes on the shoe rack.','Take your plate to the sink after eating.','Tidy your toys back into their box.'] },
+};
+function helpFor(plan,a){
+  if(a.steps?.length) return { steps:a.steps };   // a parent's own steps (from the plan editor) win
+  return SKILL_HELP[`${plan?.template}:${a.id}`] || SKILL_HELP[a.id] || null;
+}

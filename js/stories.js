@@ -57,6 +57,11 @@ function playStory(id){
 // Each play gets a token, so callbacks from a cancelled play are ignored
 let storyToken=0, storyRetries=0;
 
+// Voices skip or misread "ﷺ", so it is spoken as words (the text on screen keeps the symbol)
+function speakable(text){
+  return text.replace(/\s*ﷺ\s*([.,!?;:])?/g,(m,p)=>`, peace be upon him${p||','} `).replace(/,\s*([.!?])/g,'$1').trim();
+}
+
 function speakNextSentence(){
   if(!activeStoryId || storySentIdx>=storyQueue.length){ storyFinished(); return; }
   const token=storyToken;
@@ -65,7 +70,7 @@ function speakNextSentence(){
   const fill=document.getElementById('sp-'+activeStoryId);
   if(fill){ fill.style.transition='width 0.4s ease'; fill.style.width=pct+'%'; }
 
-  const text=storyQueue[storySentIdx];
+  const text=speakable(storyQueue[storySentIdx]);
   const u=new SpeechSynthesisUtterance(text);
   u.lang='en-GB';           // en-GB sounds better on Android Chrome
   u.rate=storySpeed;
