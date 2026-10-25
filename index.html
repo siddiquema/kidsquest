@@ -137,6 +137,7 @@ body{
 .tc-start{background:rgba(255,255,255,.12);color:var(--text);}
 .tc-reset{background:rgba(255,255,255,.07);color:var(--muted);}
 .tc-btn:disabled{opacity:.35;pointer-events:none;}
+.tc-finish{display:block;width:100%;margin-top:8px;padding:8px 10px;background:rgba(6,214,160,.16);color:var(--green);font-size:12px;}
 
 .divider{height:1px;background:rgba(255,255,255,.05);margin:14px 4px 18px;}
 
@@ -836,7 +837,7 @@ body:not(.role-kid) .kid-only{display:none!important;}
 
 <!-- TIMERS PANEL -->
 <div class="panel" id="panel-timers">
-  <div class="sec-label">Tap ▶ to start · ⏸ to pause · ↺ to reset</div>
+  <div class="sec-label">Tap ▶ to start · ⏸ to pause · ↺ to reset · ✅ when the meal is done (🥇 ≤ 20 min · 🥈 ≤ 25 min)</div>
   <label class="audio-toggle">
     <input type="checkbox" id="timerAudio" onchange="setTimerAudio(this.checked)">
     <span>🔊 Audio reminders on this device</span>
@@ -1279,8 +1280,10 @@ function renderBoard(){
   let goldT=0,silverT=0,bonusT=0, goldW=0,silverW=0,bonusW=0, lastW=0;
   KIDS.forEach(k=>{
     const ct=chartCount(k.id,0,today), cw=chartCount(k.id,0);
-    goldT+=ct.gold; silverT+=ct.silver; bonusT+=starSum(k.id,startOfTodayTs());
-    goldW+=cw.gold; silverW+=cw.silver; bonusW+=starSum(k.id,startOfWeekTs(),startOfWeekTs(1));
+    // meal medals show with the chart's gold/silver; the rest of the stars count as ➕
+    const mt=mealMedals(k.id,startOfTodayTs()), mw=mealMedals(k.id,startOfWeekTs(),startOfWeekTs(1));
+    goldT+=ct.gold+mt.gold; silverT+=ct.silver+mt.silver; bonusT+=starSum(k.id,startOfTodayTs())-mt.value;
+    goldW+=cw.gold+mw.gold; silverW+=cw.silver+mw.silver; bonusW+=starSum(k.id,startOfWeekTs(),startOfWeekTs(1))-mw.value;
     lastW+=kidStarsWeek(k.id,-1);
   });
   const tToday=chartStars({gold:goldT,silver:silverT})+bonusT;
@@ -1385,6 +1388,7 @@ function timerBoxHtml(kid,type){
             <button class="tc-btn tc-start" id="${type}-stbtn-${kid}" onclick="toggleTimer('${kid}','${type}')">▶ Start</button>
             <button class="tc-btn tc-reset" id="${type}-rsbtn-${kid}" onclick="resetTimerDo('${kid}','${type}')">↺</button>
           </div>
+          ${type==='meal'?`<button class="tc-btn tc-finish" id="meal-fin-${kid}" onclick="finishMeal('${kid}')">✅ Finished</button>`:''}
         </div>`;
 }
 
@@ -1413,7 +1417,38 @@ function updateTimerDisplays(){
     dig.classList.toggle('expired',s.expired);
     document.getElementById(`${type}-stbtn-${k.id}`).textContent =
       s.running ? '⏸ Pause' : (s.secs<s.full && s.secs>0 ? '▶ Resume' : '▶ Start');
+    const fin=document.getElementById(`meal-fin-${k.id}`);
+    if(type==='meal' && fin) fin.disabled = s.secs>=s.full; // nothing to finish until the timer has run
   }));
+}
+
+// ── meal finished: medal by how long the timer ran ──
+// ≤ 20 min → gold (1 star) · ≤ 25 min → silver (½ star) · timer ran out → no star.
+// Under 5 minutes gets no star either, so a quick start-and-finish can't earn one.
+const MEAL_GOLD_SECS=20*60, MEAL_MIN_SECS=5*60;
+function finishMeal(kid){
+  const s=timerState(kid,'meal'), name=kidById(kid)?.name||'';
+  const used=s.full-s.secs; if(used<=0) return;
+  const mins=Math.max(1,Math.round(used/60));
+  let medal=null;
+  if(!s.expired && used>=MEAL_MIN_SECS) medal = used<=MEAL_GOLD_SECS ? 'gold' : 'silver';
+  store.put('timers',kid,{ meal:{ endsAt:null, remaining:null, by:DEVICE_ID } });
+  if(medal){
+    store.add('stars',{ kid, ts:Date.now(), n:medal==='gold'?1:SILVER_VALUE, src:'meal', medal, mins, by:currentWho?.id||null });
+    speak(`${medal==='gold'?'Gold':'Silver'} star, ${name}! You finished your food in ${mins} minutes.`);
+    showToast(`${medal==='gold'?'🥇':'🥈'} ${name} finished in ${mins} min`);
+  } else if(s.expired){
+    speak(`Well done for finishing, ${name}. Try to beat the timer next time!`);
+    showToast(`${name} finished after the timer — no star this time`);
+  } else {
+    showToast(`Only ${mins} min — too quick for a star. Was the plate really finished?`);
+  }
+}
+// meal medals earned between two times, for the Star Board breakdown
+function mealMedals(kid,from,to=Infinity){
+  const m={gold:0,silver:0,value:0};
+  for(const id in STARS){ const e=STARS[id]; if(e.kid===kid && e.src==='meal' && e.ts>=from && e.ts<to){ m[e.medal]++; m.value+=e.n||0; } }
+  return m;
 }
 
 function toggleTimer(kid,type){
