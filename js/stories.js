@@ -4,6 +4,9 @@
 // story
 let storyQueue=[], storySentIdx=0, activeStoryId=null;
 let storySpeed=0.9;
+// "Up next": story ids that play one after another without touching the screen
+let storyPlaylist=[];
+const NEXT_STORY_GAP=2500; // ms of quiet between two stories
 
 // ═══════════════════════════════════════
 //  STORIES — sentence-chunked for Android
@@ -25,10 +28,51 @@ function renderStories(){
           <div class="story-title">${s.title}</div>
           <div class="story-desc">${s.desc}</div>
         </div>
+        <button class="story-add" id="sa-${s.id}" onclick="toggleQueued('${s.id}')" title="Add to Up next">＋</button>
         <button class="story-ctrl" id="sb-${s.id}" onclick="toggleStory('${s.id}')">▶</button>
       </div>
       <div class="story-progress-bar"><div class="story-progress-fill" id="sp-${s.id}"></div></div>
     </div>`).join('');
+  renderPlaylist();
+}
+
+// ── Up next ──
+function toggleQueued(id){
+  const i=storyPlaylist.indexOf(id);
+  if(i>=0) storyPlaylist.splice(i,1); else storyPlaylist.push(id);
+  renderPlaylist();
+}
+
+function clearPlaylist(){ storyPlaylist=[]; renderPlaylist(); }
+
+function playPlaylist(){
+  if(activeStoryId) return; // already playing: the list follows on by itself
+  const next=storyPlaylist.shift();
+  if(next) playStory(next);
+}
+
+function renderPlaylist(){
+  STORIES.forEach(s=>{
+    const b=document.getElementById('sa-'+s.id); if(!b) return;
+    const n=storyPlaylist.indexOf(s.id)+1;
+    b.textContent=n?n:'＋';
+    b.classList.toggle('queued',!!n);
+    b.title=n?`Number ${n} in Up next — tap to remove`:'Add to Up next';
+  });
+  const box=document.getElementById('storyPlaylist'); if(!box) return;
+  if(!storyPlaylist.length){ box.style.display='none'; return; }
+  box.style.display='';
+  const names=storyPlaylist.map((id,i)=>{
+    const s=STORIES.find(x=>x.id===id);
+    return `<span class="pl-item">${i+1}. ${s.emoji} ${esc(s.title)}</span>`;
+  }).join('');
+  box.innerHTML=`
+    <div class="pl-head">
+      <span class="pl-label">Up next</span>
+      ${activeStoryId?'':'<button class="pl-play" onclick="playPlaylist()">▶ Play all</button>'}
+      <button class="pl-clear" onclick="clearPlaylist()">Clear</button>
+    </div>
+    <div class="pl-items">${names}</div>`;
 }
 
 function toggleStory(id){
@@ -39,12 +83,15 @@ function toggleStory(id){
 function playStory(id){
   if(!window.speechSynthesis){ showToast('Speech not supported'); return; }
   const story=STORIES.find(s=>s.id===id); if(!story) return;
+  // playing a queued story takes it off Up next
+  const qi=storyPlaylist.indexOf(id); if(qi>=0) storyPlaylist.splice(qi,1);
   activeStoryId=id; storySentIdx=0; storyQueue=story.sentences; storyRetries=0;
   const token=++storyToken;
   document.getElementById('sc-'+id).classList.add('playing');
   document.getElementById('sb-'+id).textContent='⏸';
   document.getElementById('nowPlayingBanner').style.display='flex';
   document.getElementById('nowPlayingText').textContent='📖 '+story.title;
+  renderPlaylist();
   // reset progress bar
   const fill=document.getElementById('sp-'+id);
   fill.style.transition='none'; fill.style.width='0%';
@@ -116,7 +163,19 @@ function storyFinished(){
   if(!id) return;
   const fill=document.getElementById('sp-'+id);
   if(fill){ fill.style.transition='width 0.4s ease'; fill.style.width='100%'; }
-  setTimeout(stopStory, 800);
+  const token=storyToken;
+  setTimeout(()=>{
+    if(token!==storyToken) return; // Stop was pressed meanwhile
+    stopStory();
+    const next=storyPlaylist[0];
+    if(!next) return;
+    // a short quiet gap, then the next story starts on its own; Stop cancels it
+    const waitToken=storyToken;
+    const s=STORIES.find(x=>x.id===next);
+    document.getElementById('nowPlayingBanner').style.display='flex';
+    document.getElementById('nowPlayingText').textContent='⏭️ Next: '+s.title;
+    setTimeout(()=>{ if(waitToken===storyToken) playStory(next); }, NEXT_STORY_GAP);
+  }, 800);
 }
 
 function stopStory(){
@@ -131,6 +190,7 @@ function stopStory(){
     activeStoryId=null;
   }
   document.getElementById('nowPlayingBanner').style.display='none';
+  renderPlaylist();
 }
 
 // ═══════════════════════════════════════
