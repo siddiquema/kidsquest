@@ -100,20 +100,24 @@ body{
 .kid-block-header{display:flex;align-items:center;gap:8px;padding:0 4px;margin-bottom:10px;}
 .kid-block-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.06);border:2px solid var(--kc,var(--muted));flex-shrink:0;}
 .kid-block-name{font-family:'Fredoka One',cursive;font-size:17px;color:var(--kc,var(--text));}
-.timers-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.timers-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px;}
 
 .timer-box{border-radius:var(--r);padding:14px 10px 12px;text-align:center;border:1.5px solid rgba(255,255,255,0.07);transition:box-shadow .2s;user-select:none;-webkit-user-select:none;position:relative;}
 .timer-box.meal{background:var(--meal-bg);}
 .timer-box.tv{background:var(--tv-bg);}
+.timer-box.homework{background:#0b2233;}
 .timer-box.running.meal{border-color:var(--meal);box-shadow:0 0 18px rgba(255,107,107,.25);}
 .timer-box.running.tv{border-color:var(--tv);box-shadow:0 0 18px rgba(167,139,250,.25);}
+.timer-box.running.homework{border-color:var(--story);box-shadow:0 0 18px rgba(56,189,248,.25);}
 .timer-icon{font-size:20px;display:block;margin-bottom:3px;}
 .timer-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px;}
 .meal .timer-type{color:var(--meal);}
 .tv   .timer-type{color:var(--tv);}
+.homework .timer-type{color:var(--story);}
 .timer-digits{font-family:'Fredoka One',cursive;font-size:28px;line-height:1;margin-bottom:8px;transition:color .3s;}
 .meal .timer-digits{color:#ffcaca;}
 .tv   .timer-digits{color:#ddd4ff;}
+.homework .timer-digits{color:#cdeefe;}
 .timer-digits.expired{color:#ff3b3b!important;animation:blink 1s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 
@@ -124,6 +128,10 @@ body{
 .tc-start{background:rgba(255,255,255,.12);color:var(--text);}
 .tc-reset{background:rgba(255,255,255,.07);color:var(--muted);}
 .tc-btn:disabled{opacity:.35;pointer-events:none;}
+.tc-adjust{display:flex;align-items:center;justify-content:center;gap:6px;margin:-2px 0 8px;font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.tc-adj{width:28px;height:28px;flex-shrink:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text);font-size:18px;line-height:1;cursor:pointer;}
+.tc-adj:active{transform:scale(.88);}
+.tc-adjust.locked{visibility:hidden;} /* length is fixed once the timer has started */
 .tc-finish{display:block;width:100%;margin-top:8px;padding:8px 10px;background:rgba(6,214,160,.16);color:var(--green);font-size:12px;}
 
 .divider{height:1px;background:rgba(255,255,255,.05);margin:14px 4px 18px;}
@@ -542,7 +550,7 @@ body:not(.role-kid) .kid-only{display:none!important;}
   /* timers: each kid block becomes a roomy card row */
   .kid-block{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);}
   .kid-block .divider{display:none;}
-  #timersContainer{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  #timersContainer{display:grid;grid-template-columns:1fr;gap:16px;}
   .sk-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
 
   .chart-grid{grid-template-columns:160px repeat(7,1fr);min-width:0;}
@@ -553,7 +561,6 @@ body:not(.role-kid) .kid-only{display:none!important;}
   .app-wrapper{max-width:920px;}
   body{padding-bottom:60px;}
   .lb-list{grid-template-columns:1fr 1fr 1fr;}
-  #timersContainer{grid-template-columns:1fr 1fr 1fr;}
   .alarm-list{grid-template-columns:1fr 1fr 1fr;}
   .stories-list{grid-template-columns:1fr 1fr 1fr;}
   .tab-btn{cursor:pointer;}
