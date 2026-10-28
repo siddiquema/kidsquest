@@ -21,7 +21,7 @@
 ## 1. Data layout
 
 ```
-families/{familyId}                     { name, owner: uid, created, packs: ['prophet'], consent: {...}, pilotEnds }
+families/{familyId}                     { name, owner: uid, created, packs: ['home'], consent: {...}, pilotEnds }
 families/{familyId}/members/{uid}       { role: 'owner'|'parent', joined, via: 'create'|'invite'|'migrated' }
 families/{familyId}/profiles|stars|charts|chartrows|timers|alarms|devices|plans|skilllog/...   (unchanged)
 users/{uid}                             { familyId }            ← lookup: which family this login belongs to
@@ -34,7 +34,7 @@ pilotCodes/{code}                       { used: false }         ← lets a new f
 **Migrating our data — no data moves.** Our family keeps the id `home`. Firestore can't rename a path, and copying thousands of star records is where loss would happen, so we don't copy anything. Migration is only:
 
 1. Back up first: a "Download all data" button (it's already on the roadmap as **Backup**) that writes every collection to a JSON file. Keep the file somewhere safe.
-2. Add `families/home` (name, owner = Siddique's UID, `packs: ['prophet']`).
+2. Add `families/home` (name, owner = Siddique's UID, `packs: ['home']`).
 3. Add `families/home/members/{uid}` and `users/{uid}` for both existing UIDs.
 4. Publish the transitional rules (section 2), which still let the two old UIDs in. Check every tab on every device.
 5. Only after a week of normal use, publish the final rules without the hard-coded UIDs.
@@ -104,7 +104,7 @@ The pilot code is what keeps this a 2–5 family pilot: without one, anyone who 
 
 ## 4. Content per family
 
-- **Story packs.** Each story gets an optional `pack` field (`prophet-1…3` → `pack:'prophet'`; Sindbad, Frog, Woodcutter stay general). The Stories tab shows general stories plus the packs listed in `families/{id}.packs`. `home` has `['prophet']`, so nothing changes for us. New families choose in onboarding ("Include stories about the Prophet ﷺ?"), and can change it in Edit family.
+- **Stories start blank for new families.** Each story gets a `pack` field. All six current stories (Sindbad, Frog, Woodcutter, `prophet-1…3`) go in pack `home`, and the Stories tab shows only the packs listed in `families/{id}.packs`. `home` has `['home']`, so nothing changes for us. A new family starts with `packs: []`, and its Stories tab shows a friendly "Stories coming soon" note. Siddique asks each family what stories they want and builds a pack for them (e.g. `pack:'fam-…'`, added to their `packs`); recorded story audio follows later if wanted. No pack choice in onboarding.
 - **Plan templates by age.** Keep `grade3`, `reader` and `early` as they are (they're ours). Add general starters a new family can pick: **Age 4–5**, **Age 6–7**, **Age 8–10** (reading, writing, a numbers game, an own job), with no Hindi/Telugu or family references. Templates are only starting points; parents already edit everything.
 - **Voice.** Recorded phrases (timers, meals, stories) work for every family. Other children's names use the device voice. We do **not** record name clips for other families: the `audio/` folder is public on GitHub Pages, so a recorded name would publish that child's name.
 - **Quiz and Play tab** content is general and shared as is.
@@ -133,7 +133,7 @@ The pilot code is what keeps this a 2–5 family pilot: without one, anyone who 
 | 3 | Sign out | Sign out of this device, clears the offline cache | 0.5 day |
 | 4 | New family | Pilot codes, New family screen with consent, create batch, existing onboarding | 1–1.5 days |
 | 5 | Invite a parent | Invite codes, join link, join flow | 1 day |
-| 6 | Content | Story packs, general age templates, pack choice in onboarding/Edit family | 1 day |
+| 6 | Content | Story packs (current stories → `home`, new families blank), general age templates | 0.5–1 day |
 | 7 | Delete our family | Owner-only delete, plus privacy note page | 1 day |
 | 8 | Lock down | Remove `legacyHome` from the rules after a week of normal use | 0.25 day |
 
@@ -152,5 +152,5 @@ The pilot code is what keeps this a 2–5 family pilot: without one, anyone who 
 
 1. **Go ahead with the pilot, and its size and end date?** Suggested: up to 3 families, ending 31 Mar 2027, then decide whether to continue, shrink or stop.
 2. **Invite-only family creation with pilot codes, or open sign-up?** Recommended: pilot codes.
-3. **Prophet stories for new families: off by default (they choose in onboarding) or on by default?** Recommended: they choose; `home` keeps them on. Same answer for the Hindi/Telugu template being visible to others.
+3. ~~Stories for new families~~ — **decided 29 Oct 2026:** new families start with no stories; Siddique checks with each family and builds stories for them. Still open: should the Hindi/Telugu (`grade3`) template be visible to other families, or kept for `home` only?
 4. **Free for the pilot, and who signs the consent note?** Recommended: free, consent from each family's parent by email, kept by you; check TechM's policy before any future charging.
