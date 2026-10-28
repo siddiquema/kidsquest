@@ -124,6 +124,16 @@
     <div class="ek-section">This device</div>
     <div class="ob-kid-list">
       <input class="ob-input" id="ekDevice" type="text" maxlength="24" placeholder="e.g. TV, Dad's phone, Kids' phone">
+      <label class="ek-lock">Lock Mum and Dad's screens after
+        <select class="ob-input" id="ekAutoLock">
+          <option value="0">Never</option>
+          <option value="2">2 minutes</option>
+          <option value="5">5 minutes</option>
+          <option value="10">10 minutes</option>
+          <option value="30">30 minutes</option>
+        </select>
+      </label>
+      <div class="ek-hint">Without a touch for that long, a parent's screens go back to Who's here. Useful on the kids' phone and the TV.</div>
     </div>
     <button class="onb-next" onclick="saveEditKids()">Save changes</button>
     <button class="onb-back" onclick="closeEditKids()">Cancel</button>

@@ -108,6 +108,18 @@ function enterAs(id){
 
 function lockApp(){ showWho(); }
 
+// ── auto-lock (per device): a parent left signed in goes back to Who's here ──
+// after this many minutes without a touch or key press. 0 = never.
+function autoLockMins(){ return parseInt(lsGet('kq_autolock')||'0',10)||0; }
+let lastTouch=Date.now();
+['pointerdown','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>{ lastTouch=Date.now(); },{capture:true,passive:true}));
+function checkAutoLock(){
+  const mins=autoLockMins();
+  if(!mins || !isParent() || Date.now()-lastTouch < mins*60000) return;
+  showWho();
+  showToast('🔒 Locked — tap your name to come back');
+}
+
 function setLockText(icon,title,sub,isErr){
   document.getElementById('lockIcon').textContent=icon;
   document.getElementById('lockTitle').textContent=title;
@@ -353,6 +365,7 @@ function openEditKids(){
   ekKids    = KIDS.map(k=>({ id:k.id, name:k.name, age:k.age, emoji:k.emoji, color:k.color, pin:'' }));
   ekParents = PARENTS.map(p=>({ id:p.id, name:p.name, emoji:p.emoji, color:p.color, pin:'' }));
   document.getElementById('ekDevice').value = lsGet('kq_device_name') || '';
+  document.getElementById('ekAutoLock').value = String(autoLockMins());
   renderEditRows();
   document.getElementById('editKids').classList.add('show');
 }
@@ -432,6 +445,7 @@ async function saveEditKids(){
   }
   const dev=document.getElementById('ekDevice').value.trim();
   if(dev){ lsSet('kq_device_name',dev); registerDevice(); }
+  lsSet('kq_autolock',document.getElementById('ekAutoLock').value);
   closeEditKids();
   showToast('✅ Family updated');
 }

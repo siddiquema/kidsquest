@@ -8,7 +8,23 @@ let ringingKid=null;
 // ═══════════════════════════════════════
 //  ALARMS  (each rings only on the device picked for it)
 // ═══════════════════════════════════════
-function alarmOf(kid){ return { time:'07:00', on:false, device:null, ...(ALARMS[kid]||{}) }; }
+// days: the weekdays it repeats on (0=Sun…6=Sat). Mon–Fri unless a parent changes it;
+// with no days picked it rings once and then switches itself off.
+const ALARM_DEFAULT_DAYS=[1,2,3,4,5];
+function alarmOf(kid){ return { time:'07:00', on:false, device:null, days:ALARM_DEFAULT_DAYS, ...(ALARMS[kid]||{}) }; }
+function alarmDaysText(days){
+  const d=[...days].sort((a,b)=>a-b).join(',');
+  if(!days.length) return 'once';
+  if(d==='0,1,2,3,4,5,6') return 'every day';
+  if(d==='1,2,3,4,5') return 'Mon–Fri';
+  if(d==='0,6') return 'weekends';
+  return days.slice().sort((a,b)=>a-b).map(i=>DAYS[i]).join(', ');
+}
+function toggleAlarmDay(kid,day){
+  const days=alarmOf(kid).days;
+  const next=days.includes(day) ? days.filter(x=>x!==day) : [...days,day].sort((a,b)=>a-b);
+  store.put('alarms',kid,{ days:next });
+}
 
 function renderAlarms(){
   const devIds=Object.keys(DEVICES);
@@ -28,13 +44,15 @@ function renderAlarms(){
           onchange="saveAlarmTime('${kid.id}',this.value)">
         <button class="alarm-toggle ${a.on?'on':''}" onclick="toggleAlarm('${kid.id}')"></button>
       </div>
+      <div class="alarm-days">${DAYS.map((d,i)=>`<button class="alarm-day ${a.days.includes(i)?'on':''}"
+        onclick="toggleAlarmDay('${kid.id}',${i})" title="${d}">${d[0]}</button>`).join('')}</div>
       ${devIds.length>1 || (a.device && a.device!==DEVICE_ID) ? `
       <label class="alarm-device-row">Rings on
         <select class="alarm-device" onchange="setAlarmDevice('${kid.id}',this.value)">
           ${a.device?'':'<option value="" selected>Choose a device</option>'}${opts}
         </select>
       </label>` : ''}
-      <div class="alarm-label">${a.on?`Alarm ON ✓ · rings on ${esc(devName(a.device))}`:'Alarm OFF'}</div>
+      <div class="alarm-label">${a.on?`Alarm ON ✓ · ${alarmDaysText(a.days)} · rings on ${esc(devName(a.device))}`:'Alarm OFF'}</div>
     </div>`;
   }).join('');
 }
@@ -70,6 +88,7 @@ function checkAlarms(){
   KIDS.forEach(k=>{
     const a=alarmOf(k.id);
     if(!a.on || a.device!==DEVICE_ID || k.id===ringingKid || ringQueue.includes(k.id)) return;
+    if(a.days.length && !a.days.includes(now.getDay())) return; // not one of its days
     const [h,m]=String(a.time).split(':').map(Number), late=mins-(h*60+m);
     const rang='kq_rang_'+k.id, mark=today+' '+a.time;
     if(late<0 || late>ALARM_GRACE || lsGet(rang)===mark) return;
@@ -94,8 +113,8 @@ function ringAlarm(id){
 function dismissAlarm(){
   stopAnnouncements();
   if(ringingKid!==null){
-    // turn alarm off after firing so it doesn't re-ring tomorrow
-    store.put('alarms',ringingKid,{ on:false });
+    // a repeating alarm stays on for its next day; a one-time alarm switches off
+    if(!alarmOf(ringingKid).days.length) store.put('alarms',ringingKid,{ on:false });
     ringingKid=null;
   }
   // next kid in line rings straight away
