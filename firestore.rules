@@ -1,19 +1,92 @@
 rules_version = '2';
 
-// Only the family's KidQuest logins can read or write the family's data.
+// Each family's data can only be read or written by that family's parents.
 // Paste this into Firebase console → Firestore Database → Rules → Publish.
-// To add or replace a login, put its User UID (Authentication → Users) in the list.
+//
+//   families/{fid}                 { name, createdBy, created, packs, pilotCode, consent }
+//   families/{fid}/members/{uid}   { role:'owner'|'parent', joined, via }   ← who is in the family
+//   families/{fid}/<data>/...      profiles, stars, charts, timers, … (the app's data)
+//   users/{uid}                    { familyId }   ← lets the app find a login's family
+//   pilotCodes/{code}              { by, created, usedBy, family }   ← one new family each
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isFamily() {
-      return request.auth != null
-          && request.auth.uid in [
-               'QSMPPR1JW7cEKG1tZIz6wIYOHIk2',
-               'VUY1ePiGsHg7SYcQ8ufghji1bBE2'
-             ];
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function famPath(fid) { return /databases/$(database)/documents/families/$(fid); }
+    function memberPath(fid, uid) { return /databases/$(database)/documents/families/$(fid)/members/$(uid); }
+    function codePath(code) { return /databases/$(database)/documents/pilotCodes/$(code); }
+
+    // The two original logins of the 'home' family. They join 'home' as owners on their
+    // own the first time they open the new version. Remove after everyone has (step 8 of
+    // docs/multi-family-plan.md); membership then does the job alone.
+    function legacyHome(fid) {
+      return fid == 'home' && signedIn() && me() in [
+        'QSMPPR1JW7cEKG1tZIz6wIYOHIk2',
+        'VUY1ePiGsHg7SYcQ8ufghji1bBE2'
+      ];
     }
-    match /families/home/{document=**} {
-      allow read, write: if isFamily();
+    function isMember(fid) { return signedIn() && exists(memberPath(fid, me())); }
+    function inFamily(fid) { return isMember(fid) || legacyHome(fid); }
+
+    match /users/{uid} {
+      allow get: if signedIn() && me() == uid;
+      // only pointing at a family I'm a member of (or become one in the same batch)
+      allow create: if signedIn() && me() == uid
+                    && request.resource.data.keys().hasOnly(['familyId'])
+                    && existsAfter(memberPath(request.resource.data.familyId, uid));
+      allow delete: if signedIn() && me() == uid;
+    }
+
+    match /pilotCodes/{code} {
+      // look up one code at a time; codes can never be listed
+      allow get: if signedIn();
+      allow create: if inFamily('home')
+                    && request.resource.data.by == me()
+                    && request.resource.data.usedBy == null
+                    && request.resource.data.family == null;
+      // using a code: once, by me, for the family I create in the same batch
+      allow update: if signedIn()
+                    && resource.data.usedBy == null
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy', 'family'])
+                    && request.resource.data.usedBy == me()
+                    && getAfter(famPath(request.resource.data.family)).data.createdBy == me();
+    }
+
+    match /families/{fid} {
+      allow get: if inFamily(fid);
+      allow create: if signedIn() && (
+        // the original 'home' family
+        (legacyHome(fid) && request.resource.data.createdBy == me()) ||
+        // a new family: needs an unused pilot code, used up in the same batch, and consent
+        (request.resource.data.createdBy == me()
+          && request.resource.data.packs == []
+          && request.resource.data.consent.by == me()
+          && get(codePath(request.resource.data.pilotCode)).data.usedBy == null
+          && getAfter(codePath(request.resource.data.pilotCode)).data.usedBy == me()
+          && getAfter(codePath(request.resource.data.pilotCode)).data.family == fid)
+      );
+      // owners may rename the family; story packs are set by the admin in the console
+      allow update: if signedIn()
+                    && get(memberPath(fid, me())).data.role == 'owner'
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']);
+
+      match /members/{uid} {
+        allow read: if inFamily(fid);
+        allow create: if signedIn() && me() == uid && (
+          (legacyHome(fid) && request.resource.data.via == 'migrated') ||
+          // the creator of a new family, in the same batch that creates it
+          (request.resource.data.via == 'create'
+            && request.resource.data.role == 'owner'
+            && !exists(famPath(fid))
+            && getAfter(famPath(fid)).data.createdBy == me())
+        );
+        allow delete: if signedIn() && me() == uid;
+      }
+
+      // the family's data: profiles, stars, charts, chartrows, timers, alarms, devices, plans, skilllog
+      match /{col}/{doc=**} {
+        allow read, write: if col != 'members' && inFamily(fid);
+      }
     }
   }
 }

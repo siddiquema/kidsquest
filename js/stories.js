@@ -20,8 +20,23 @@ function setSpeed(val,btn){
   showToast(`Story speed: ${val===0.75?'Slow':val===0.9?'Normal':'Fast'}`);
 }
 
+// Stories belong to a pack ('home' unless the story says otherwise); a family sees its own packs
+function familyStories(){ return STORIES.filter(s=>FAMILY_PACKS.includes(s.pack||'home')); }
+
 function renderStories(){
-  document.getElementById('storiesList').innerHTML=STORIES.map(s=>`
+  const list=familyStories();
+  if(!list.length){
+    document.getElementById('storiesList').innerHTML=`
+      <div class="story-card"><div class="story-top">
+        <div class="story-emoji">📚</div>
+        <div class="story-meta">
+          <div class="story-title">Stories coming soon</div>
+          <div class="story-desc">Your family's stories are being written. They'll appear here.</div>
+        </div>
+      </div></div>`;
+    renderPlaylist(); return;
+  }
+  document.getElementById('storiesList').innerHTML=list.map(s=>`
     <div class="story-card" id="sc-${s.id}">
       <div class="story-top">
         <div class="story-emoji">${s.emoji}</div>
