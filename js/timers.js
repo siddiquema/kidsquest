@@ -105,10 +105,10 @@ function finishMeal(kid){
   store.put('timers',kid,{ meal:{ endsAt:null, remaining:null, by:DEVICE_ID } });
   if(medal){
     store.add('stars',{ kid, ts:Date.now(), n:medal==='gold'?1:SILVER_VALUE, src:'meal', medal, mins, by:currentWho?.id||null });
-    speak(`${medal==='gold'?'Gold':'Silver'} star, ${name}! You finished your food in ${mins} minutes.`);
+    speak(`${medal==='gold'?'Gold':'Silver'} star, ${name}! You finished your food in ${mins} minutes.`,[nameClip(name),'meal-'+medal]);
     showToast(`${medal==='gold'?'🥇':'🥈'} ${name} finished in ${mins} min`);
   } else if(s.expired){
-    speak(`Well done for finishing, ${name}. Try to beat the timer next time!`);
+    speak(`Well done for finishing, ${name}. Try to beat the timer next time!`,[nameClip(name),'meal-late']);
     showToast(`${name} finished after the timer — no star this time`);
   } else {
     showToast(`Only ${mins} min — too quick for a star. Was the plate really finished?`);
@@ -143,7 +143,7 @@ function timerAudioOn(){ return lsGet('kq_timer_audio')==='1'; }
 function setTimerAudio(on){
   lsSet('kq_timer_audio', on?'1':'0');
   // speaking here also unlocks speech for later reminders on browsers that need a tap first
-  if(on) speak('Timer reminders are on for this device.');
+  if(on) speak('Timer reminders are on for this device.',['timer-audio-on']);
   showToast(on?'🔊 Timer reminders on for this device':'🔇 Timer reminders off for this device');
 }
 
@@ -163,15 +163,15 @@ function onTick(kid,type,secs){
   const name=kidById(kid)?.name||'';
   if(type==='meal'){
     const mins=Math.floor(secs/60), rem=secs%60;
-    if(secs>300){ if(rem===0&&mins>0&&mins%5===0) speak(`${name}, ${mins} minutes left to finish your food.`); }
-    else if(secs>0){ if(rem===0&&mins>0) speak(`${name}, ${mins} minute${mins>1?'s':''} left to finish your food.`); if(secs===30) speak(`${name}, 30 seconds left!`); }
-    else speak(`Time is up for ${name}, meal time is finished!`);
+    if(secs>300){ if(rem===0&&mins>0&&mins%5===0) speak(`${name}, ${mins} minutes left to finish your food.`,[nameClip(name),'meal-left-'+mins]); }
+    else if(secs>0){ if(rem===0&&mins>0) speak(`${name}, ${mins} minute${mins>1?'s':''} left to finish your food.`,[nameClip(name),'meal-left-'+mins]); if(secs===30) speak(`${name}, 30 seconds left!`,[nameClip(name),'meal-30s']); }
+    else speak(`Time is up for ${name}, meal time is finished!`,[nameClip(name),'meal-up']);
   } else if(type==='homework'){
-    if(secs===600 && timerState(kid,type).full>900) speak(`${name}, 10 minutes of homework time left.`);
-    if(secs===300) speak(`${name}, 5 minutes left. Finish the question you're on.`);
-    if(secs===0)   speak(`Homework time is done, ${name}. Great focus! Time for a short break.`);
+    if(secs===600 && timerState(kid,type).full>900) speak(`${name}, 10 minutes of homework time left.`,[nameClip(name),'hw-10']);
+    if(secs===300) speak(`${name}, 5 minutes left. Finish the question you're on.`,[nameClip(name),'hw-5']);
+    if(secs===0)   speak(`Homework time is done, ${name}. Great focus! Time for a short break.`,[nameClip(name),'hw-done']);
   } else {
-    if(secs===600) speak(`${name}, 10 minutes of TV time left.`);
-    if(secs===0)   speak(`Time is up for ${name}! Please turn off the TV or pass the remote.`);
+    if(secs===600) speak(`${name}, 10 minutes of TV time left.`,[nameClip(name),'tv-10']);
+    if(secs===0)   speak(`Time is up for ${name}! Please turn off the TV or pass the remote.`,[nameClip(name),'tv-up']);
   }
 }

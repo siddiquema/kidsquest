@@ -1,6 +1,6 @@
 # KidQuest roadmap
 
-Pending work, in rough priority order. Built so far: shared storage (Firebase), a PIN for each person, the Star Board, synced timers with per-device audio reminders, alarms per device, the 🌱 Skills tab (Phase 1 of both planning briefs) and the 🎮 Play tab.
+Pending work, in rough priority order. Built so far: shared storage (Firebase), a PIN for each person, the Star Board, synced timers with per-device audio reminders, alarms per device, the 🌱 Skills tab (Phase 1 of both planning briefs), the 🎮 Play tab, and recorded voice clips for stories and announcements (`audio/`, made with `tools/make_audio.py`).
 
 ## 1. Configure section (parents only)
 

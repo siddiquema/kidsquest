@@ -107,14 +107,17 @@ function setProgress(){ document.getElementById('playProgress').innerHTML=Array.
 // run fn later only if the same game is still open
 function later(fn,ms){ const t=game?.token; setTimeout(()=>{ if(game && game.token===t) fn(); },ms); }
 const PRAISE=['Yes! Well done!','Correct!','Brilliant!','You got it!','Super!'];
+const MATCH_PRAISE=['A match!','Yes, a pair!','Well done!'];
+// recorded as praise-1 … praise-5, in this order
+function sayPraise(){ const i=rnd(PRAISE.length); speak(PRAISE[i],['praise-'+(i+1)]); }
 
 function finishGame(scoreText){
   const kid=game.kid, name=kidById(kid)?.name||'';
   let starMsg;
   if(playStarsToday(kid)<PLAY_STARS_PER_DAY){
     store.add('stars',{ kid, ts:Date.now(), n:1, src:'play', task:game.def.id, by:currentWho?.id||null });
-    starMsg='⭐ +1 star!'; speak(`Great playing, ${name}! You earned a star!`);
-  } else { starMsg='You’ve got all 3 play stars today. Great practice!'; speak(`Great playing, ${name}!`); }
+    starMsg='⭐ +1 star!'; speak(`Great playing, ${name}! You earned a star!`,[nameClip(name),'play-star']);
+  } else { starMsg='You’ve got all 3 play stars today. Great practice!'; speak(`Great playing, ${name}!`,[nameClip(name),'play-done']); }
   game.round=ROUNDS; setProgress();
   playArea().innerHTML=`
     <div class="play-done">
@@ -146,8 +149,9 @@ function answerQuiz(i){
   const btns=playArea().querySelectorAll('.quiz-opt');
   const right=it.options[i]===it.answer;
   btns.forEach((b,j)=>{ if(it.options[j]===it.answer) b.classList.add('right'); else if(j===i) b.classList.add('wrong'); });
-  if(right){ game.score++; speak(pickOne(PRAISE)); }
-  else speak(it.hi ? 'Good try! Look at the green answer.' : `Good try! The answer is ${it.answer}.`);
+  if(right){ game.score++; sayPraise(); }
+  else if(it.hi) speak('Good try! Look at the green answer.',['quiz-try-pic']);
+  else speak(`Good try! The answer is ${it.answer}.`,['quiz-try']);
   document.getElementById('quizFeedback').innerHTML=`<div class="quiz-msg">${right?'✅ '+pickOne(PRAISE):'💡 Good try! The answer is in green.'}</div>
     <button class="onb-next" onclick="game.round++;showQuestion()">${game.round+1<ROUNDS?'Next →':'Finish 🎉'}</button>`;
 }
@@ -157,7 +161,7 @@ const PIC_POOL=['🐶','🐱','🐰','🦊','🐼','🐸','🐵','🦁','🍎','
 function startMemory(){
   const cards=shuffle(pickN(PIC_POOL,6).flatMap(e=>[e,e])).map(e=>({e,open:false,done:false}));
   Object.assign(game,{ cards, picks:[], pairs:0, moves:0, busy:false });
-  speak('Find the matching pairs!');
+  speak('Find the matching pairs!',['memory-start']);
   drawMemory();
 }
 function drawMemory(){
@@ -173,7 +177,8 @@ function flipCard(i){
   const [a,b]=game.picks.map(j=>game.cards[j]); game.picks=[];
   if(a.e===b.e){
     a.done=b.done=true; a.open=b.open=false; game.pairs++;
-    speak(game.pairs<6?pickOne(['A match!','Yes, a pair!','Well done!']):'You found them all!');
+    if(game.pairs<6){ const m=rnd(MATCH_PRAISE.length); speak(MATCH_PRAISE[m],['match-'+(m+1)]); }
+    else speak('You found them all!',['memory-all']);
     drawMemory();
     if(game.pairs===6) later(()=>finishGame(`All pairs found in ${game.moves} tries`),900);
   } else {
@@ -183,7 +188,7 @@ function flipCard(i){
 }
 
 // ── what moved? (from the twins' thinking day) ──
-function startMoved(){ speak('Look carefully at the pictures!'); movedRound(); }
+function startMoved(){ speak('Look carefully at the pictures!',['moved-start']); movedRound(); }
 function movedRound(){
   setProgress();
   if(game.round>=ROUNDS){ finishGame(`${game.score} out of ${ROUNDS} spotted`); return; }
@@ -193,8 +198,8 @@ function movedRound(){
   const mover=rnd(n), from=items[mover].at;
   game.moved={ items, mover, to:cells[n] };
   drawMoved('look');
-  later(()=>{ drawMoved('hide'); speak('Close your eyes!'); },3000);
-  later(()=>{ items[mover].at=cells[n]; game.moved.from=from; drawMoved('ask'); speak('Which one moved? Tap it!'); },4300);
+  later(()=>{ drawMoved('hide'); speak('Close your eyes!',['moved-close']); },3000);
+  later(()=>{ items[mover].at=cells[n]; game.moved.from=from; drawMoved('ask'); speak('Which one moved? Tap it!',['moved-ask']); },4300);
 }
 function drawMoved(stage){
   const grid=Array(9).fill('');
@@ -205,7 +210,7 @@ function drawMoved(stage){
 function answerMoved(i){
   if(game.moved.answered) return; game.moved.answered=true;
   const right=i===game.moved.mover;
-  if(right){ game.score++; speak(pickOne(PRAISE)); } else speak('Good try! This one moved.');
+  if(right){ game.score++; sayPraise(); } else speak('Good try! This one moved.',['moved-try']);
   playArea().querySelectorAll('.mv-item').forEach((b,j)=>{ if(j===game.moved.mover) b.classList.add('right'); else if(j===i) b.classList.add('wrong'); });
   later(()=>{ game.round++; movedRound(); },1600);
 }
@@ -219,15 +224,15 @@ function countRound(){
   const [e,name]=pickOne(COUNT_POOL), n=1+rnd(Math.min(10,4+game.round*2)); // bigger numbers as it goes
   const opts=shuffle([n,...pickN([n-2,n-1,n+1,n+2].filter(x=>x>0&&x<=12),2)]);
   game.count={ n, opts, answered:false };
-  speak(`How many ${name}?`);
+  speak(`How many ${name}?`,['count-'+name]);
   playArea().innerHTML=`<div class="cnt-items">${Array(n).fill(`<span>${e}</span>`).join('')}</div>
-    <button class="quiz-say" onclick="speak('How many ${name}?')">🔊</button>
+    <button class="quiz-say" onclick="speak('How many ${name}?',['count-${name}'])">🔊</button>
     <div class="cnt-opts">${opts.map(o=>`<button class="cnt-opt" onclick="answerCount(${o})">${o}</button>`).join('')}</div>`;
 }
 function answerCount(o){
   if(game.count.answered) return; game.count.answered=true;
   const right=o===game.count.n;
-  if(right){ game.score++; speak(`Yes! ${o}!`); } else speak(`Good try! There are ${game.count.n}.`);
+  if(right){ game.score++; speak(`Yes! ${o}!`,['count-yes-'+o]); } else speak(`Good try! There are ${game.count.n}.`,['count-try-'+game.count.n]);
   playArea().querySelectorAll('.cnt-opt').forEach(b=>{ const v=+b.textContent; if(v===game.count.n) b.classList.add('right'); else if(v===o) b.classList.add('wrong'); });
   later(()=>{ game.round++; countRound(); },1600);
 }
@@ -235,7 +240,7 @@ function answerCount(o){
 // ── odd one out ──
 const ODD_SETS=[ ['fruit',['🍎','🍌','🍇','🍓','🍊','🍐']], ['animals',['🐶','🐱','🐮','🐷','🐰','🐸']],
   ['vehicles',['🚗','🚌','🚲','🚂','✈️','🚀']], ['clothes',['👕','👖','🧦','👗','🧢','👟']], ['sports balls',['⚽','🏀','🏈','⚾','🎾','🏐']] ];
-function startOdd(){ speak('Which one is different?'); oddRound(); }
+function startOdd(){ speak('Which one is different?',['odd-start']); oddRound(); }
 function oddRound(){
   setProgress();
   if(game.round>=ROUNDS){ finishGame(`${game.score} out of ${ROUNDS} found`); return; }
@@ -243,13 +248,14 @@ function oddRound(){
   const odd=pickOne(other), items=shuffle([...pickN(set,3),odd]);
   game.odd={ items, odd, cat, answered:false };
   playArea().innerHTML=`<div class="mv-label">🧐 Which one is different?</div>
-    <button class="quiz-say" onclick="speak('Which one is different?')">🔊</button>
+    <button class="quiz-say" onclick="speak('Which one is different?',['odd-start'])">🔊</button>
     <div class="odd-grid">${items.map((e,i)=>`<button class="odd-item" onclick="answerOdd(${i})">${e}</button>`).join('')}</div>`;
 }
 function answerOdd(i){
   if(game.odd.answered) return; game.odd.answered=true;
   const right=game.odd.items[i]===game.odd.odd;
-  if(right){ game.score++; speak(`Yes! The others are all ${game.odd.cat}.`); } else speak(`Good try! The others are all ${game.odd.cat}.`);
+  const catClip=game.odd.cat.split(' ').pop(); // 'sports balls' → balls
+  if(right){ game.score++; speak(`Yes! The others are all ${game.odd.cat}.`,['odd-yes-'+catClip]); } else speak(`Good try! The others are all ${game.odd.cat}.`,['odd-try-'+catClip]);
   playArea().querySelectorAll('.odd-item').forEach((b,j)=>{ if(game.odd.items[j]===game.odd.odd) b.classList.add('right'); else if(j===i) b.classList.add('wrong'); });
   later(()=>{ game.round++; oddRound(); },1800);
 }

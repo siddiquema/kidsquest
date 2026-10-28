@@ -51,11 +51,11 @@ function skillTick(){
   const left=Math.max(0,Math.ceil((skillRun.endsAt-Date.now())/1000));
   const el=document.getElementById('skrun-'+skillRun.kid+'-'+skillRun.taskId);
   if(el) el.textContent=mmss(left);
-  if(left<=60 && !skillRun.warned && left>0){ skillRun.warned=true; speak('One minute left.'); }
+  if(left<=60 && !skillRun.warned && left>0){ skillRun.warned=true; speak('One minute left.',['skill-1min']); }
   if(left>0) return;
   const {kid,taskId}=skillRun, name=kidById(kid)?.name||'';
   skillRun=null;
-  speak(`Time's up, ${name}! Tap Done when you've finished.`);
+  speak(`Time's up, ${name}! Tap Done when you've finished.`,[nameClip(name),'skill-up']);
   // point to the next timed block that isn't done yet
   const list=todaysActivities(kid), i=list.findIndex(x=>x.id===taskId);
   const next=list.slice(i+1).find(x=>x.minutes && !logFor(kid,todayKey(),x.id));
@@ -72,7 +72,7 @@ function markSkillDone(kid,taskId){
     approveLog(id,{ kid, date, taskId, title:a.title });
   } else {
     store.put('skilllog',id,{ kid, date, taskId, title:a.title, status:'pending', ts:Date.now(), by:currentWho?.id||null },false);
-    speak(`Great job, ${name}! Ask Mum or Dad to check it.`);
+    speak(`Great job, ${name}! Ask Mum or Dad to check it.`,[nameClip(name),'skill-done']);
     showToast('✋ Waiting for Mum or Dad');
   }
 }
@@ -87,7 +87,7 @@ function approveLog(id,base){
   store.put('stars','skill_'+id,{ kid:e.kid, ts, n:SKILL_STAR, src:'skill', task:e.taskId, by:currentWho.id },false);
   SKILLLOG[id]={ ...e, status:'approved', ts }; // so the week check below sees it straight away
   checkFullWeek(e.kid,e.date);
-  speak(`Well done ${name}! One more star!`);
+  speak(`Well done ${name}! One more star!`,[nameClip(name),'skill-approved']);
   showToast(`⭐ +1 for ${name}`);
 }
 
@@ -118,7 +118,7 @@ function checkFullWeek(kid,date){
   if(any && all){
     if(!STARS[sid]){
       store.put('stars',sid,{ kid, ts:dateTs(date), n:FULL_WEEK_BONUS, src:'skill', task:'full-week' },false);
-      speak(`Amazing, ${kidById(kid)?.name}! Every weekday done. Two bonus stars!`);
+      speak(`Amazing, ${kidById(kid)?.name}! Every weekday done. Two bonus stars!`,[nameClip(kidById(kid)?.name),'skill-full-week']);
     }
   } else if(STARS[sid]) store.remove('stars',sid);
 }
