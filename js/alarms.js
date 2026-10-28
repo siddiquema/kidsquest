@@ -58,16 +58,23 @@ function setAlarmDevice(kid,device){ if(device) store.put('alarms',kid,{ device 
 let ringQueue=[];
 let lastAlarmMinute='';
 
+// A sleeping or background tab can skip the exact minute, so an alarm still rings
+// when the device wakes up within ALARM_GRACE minutes — but only once per day.
+const ALARM_GRACE=10;
 function checkAlarms(){
   const now=new Date();
   const hhmm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   if(hhmm===lastAlarmMinute) return; // check each minute once, whatever second we land on
   lastAlarmMinute=hhmm;
+  const mins=now.getHours()*60+now.getMinutes(), today=ymd(now);
   KIDS.forEach(k=>{
     const a=alarmOf(k.id);
-    if(a.on && a.time===hhmm && a.device===DEVICE_ID && k.id!==ringingKid && !ringQueue.includes(k.id)){
-      if(ringingKid===null) ringAlarm(k.id); else ringQueue.push(k.id);
-    }
+    if(!a.on || a.device!==DEVICE_ID || k.id===ringingKid || ringQueue.includes(k.id)) return;
+    const [h,m]=String(a.time).split(':').map(Number), late=mins-(h*60+m);
+    const rang='kq_rang_'+k.id, mark=today+' '+a.time;
+    if(late<0 || late>ALARM_GRACE || lsGet(rang)===mark) return;
+    lsSet(rang,mark);
+    if(ringingKid===null) ringAlarm(k.id); else ringQueue.push(k.id);
   });
 }
 
@@ -85,7 +92,7 @@ function ringAlarm(id){
 }
 
 function dismissAlarm(){
-  window.speechSynthesis&&window.speechSynthesis.cancel();
+  stopAnnouncements();
   if(ringingKid!==null){
     // turn alarm off after firing so it doesn't re-ring tomorrow
     store.put('alarms',ringingKid,{ on:false });
