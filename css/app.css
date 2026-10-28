@@ -166,6 +166,9 @@ body{
 }
 .alarm-toggle.on::after{transform:translateX(22px);}
 .alarm-label{font-size:11px;color:var(--muted);margin-top:8px;font-weight:700;}
+.alarm-days{display:flex;gap:5px;margin-top:10px;}
+.alarm-day{flex:1;max-width:38px;height:32px;border-radius:50%;border:1.5px solid rgba(251,146,60,.25);background:transparent;color:var(--muted);font-family:'Quicksand',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.alarm-day.on{background:rgba(251,146,60,.18);border-color:#fb923c;color:#fb923c;}
 
 /* ringing overlay */
 .ring-overlay{
@@ -386,6 +389,9 @@ body{
 .ob-pin{width:74px;flex-shrink:0;text-align:center;}
 .pw-input{width:100%;margin-bottom:12px;}
 .ek-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);text-align:left;margin:4px 4px 10px;}
+.ek-lock{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:12px;font-weight:700;color:var(--muted);}
+.ek-lock select{color-scheme:dark;}
+.ek-hint{font-size:12px;color:var(--muted);text-align:left;line-height:1.4;}
 .alarm-device-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:700;}
 .alarm-device{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(251,146,60,.25);border-radius:var(--r-sm);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;padding:7px 10px;color-scheme:dark;}
 /* ── SKILLS ── */

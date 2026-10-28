@@ -32,7 +32,8 @@ function renderAll(){
   renderSkills();
   renderPlay();
   // don't redraw alarms while someone is picking a time or device
-  if(!document.getElementById('alarmList').contains(document.activeElement)) renderAlarms();
+  const af=document.activeElement;
+  if(!(document.getElementById('alarmList').contains(af) && /^(INPUT|SELECT)$/.test(af.tagName))) renderAlarms();
 }
 
 
@@ -73,7 +74,7 @@ async function boot(){
 // timers, alarms and the weekly rollover all run off one clock
 setInterval(()=>{
   if(!store || !KIDS.length) return; // wait until the family has loaded
-  timerTick(); skillTick(); checkAlarms(); checkWeekRollover();
+  timerTick(); skillTick(); checkAlarms(); checkWeekRollover(); checkAutoLock();
 },500);
 
 if('serviceWorker' in navigator && location.protocol!=='file:'){
