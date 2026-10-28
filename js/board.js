@@ -110,7 +110,7 @@ function addBonus(id,amount){
     const dv=document.getElementById('dv-'+id);
     if(dv){ dv.classList.add('bump'); setTimeout(()=>dv.classList.remove('bump'),360); }
   },60);
-  speak(`${amount} bonus star${amount>1?'s':''} for ${k.name}! Great job!`);
+  speak(`${amount} bonus star${amount>1?'s':''} for ${k.name}! Great job!`,[nameClip(k.name),'bonus-'+amount]);
   showToast(`🌟 +${amount} bonus for ${k.name}!`);
 }
 

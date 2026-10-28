@@ -15,7 +15,8 @@ function setSpeed(val,btn){
   storySpeed=val;
   document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  if(activeStoryId){ stopStory(); } // restart will use new speed
+  if(storyAudio) storyAudio.playbackRate=storyAudioRate(); // a recording changes speed as it plays
+  else if(activeStoryId){ stopStory(); } // the device voice restarts with the new speed
   showToast(`Story speed: ${val===0.75?'Slow':val===0.9?'Normal':'Fast'}`);
 }
 
@@ -81,7 +82,6 @@ function toggleStory(id){
 }
 
 function playStory(id){
-  if(!window.speechSynthesis){ showToast('Speech not supported'); return; }
   const story=STORIES.find(s=>s.id===id); if(!story) return;
   // playing a queued story takes it off Up next
   const qi=storyPlaylist.indexOf(id); if(qi>=0) storyPlaylist.splice(qi,1);
@@ -95,6 +95,35 @@ function playStory(id){
   // reset progress bar
   const fill=document.getElementById('sp-'+id);
   fill.style.transition='none'; fill.style.width='0%';
+  playStoryAudio(id,token);
+}
+
+// The recording in audio/stories/<id>.mp3 is played when there is one;
+// if it is missing or won't play, the device voice reads the story instead.
+function playStoryAudio(id,token){
+  const a=new Audio(AUDIO_DIR+'stories/'+id+'.mp3');
+  storyAudio=a;
+  let started=false;
+  const fallback=()=>{
+    if(token!==storyToken || started || storyAudio!==a) return; // error and play() can both report it
+    a.pause(); storyAudio=null;
+    playStoryTTS(token);
+  };
+  a.onplaying=()=>{ started=true; };
+  a.ontimeupdate=()=>{
+    if(token!==storyToken || !a.duration) return;
+    const fill=document.getElementById('sp-'+id);
+    if(fill){ fill.style.transition='width 0.4s linear'; fill.style.width=Math.round(a.currentTime/a.duration*100)+'%'; }
+  };
+  a.onended=()=>{ if(token===storyToken) storyFinished(); };
+  a.onerror=fallback;
+  a.playbackRate=storyAudioRate();
+  a.play().catch(fallback);
+}
+function storyAudioRate(){ return storySpeed/0.9; } // Normal (0.9) plays the recording as made
+
+function playStoryTTS(token){
+  if(!window.speechSynthesis){ stopStory(); showToast('Speech not supported'); return; }
   window.speechSynthesis.cancel();
   window.speechSynthesis.resume(); // Chrome can get stuck paused
   // speaking straight after cancel() is sometimes dropped, so wait a moment
@@ -102,7 +131,7 @@ function playStory(id){
 }
 
 // Each play gets a token, so callbacks from a cancelled play are ignored
-let storyToken=0, storyRetries=0;
+let storyToken=0, storyRetries=0, storyAudio=null;
 
 // Voices skip or misread "ﷺ", so it is spoken as words (the text on screen keeps the symbol)
 function speakable(text){
@@ -180,6 +209,8 @@ function storyFinished(){
 
 function stopStory(){
   storyToken++;
+  if(storyAudio){ storyAudio.pause(); storyAudio.removeAttribute('src'); storyAudio=null; }
+  storyPausedForAnn=false;
   window.speechSynthesis&&window.speechSynthesis.cancel();
   storyQueue=[]; storySentIdx=0;
   if(activeStoryId){
@@ -213,8 +244,51 @@ function pickVoice(langs){
 }
 
 // Announcements are queued, never cancelling — so they don't cut off a story
-// or each other. A story's next sentence is queued after any announcement.
-function speak(text){
+// or each other. With `clips` (names of recorded MP3s in audio/phrases/, played
+// one after another) the recording is used; the device voice says `text` if a
+// clip is missing or won't play. A recorded story pauses while a clip plays.
+const AUDIO_DIR='audio/';
+let annQueue=[], annBusy=false, storyPausedForAnn=false;
+function nameClip(name){ return 'name-'+String(name).toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+function speak(text,clips){
+  if(clips?.length && window.Audio){
+    annQueue.push({text,clips});
+    if(!annBusy) nextAnnouncement();
+    return;
+  }
+  speakTTS(text);
+}
+
+function nextAnnouncement(){
+  const a=annQueue.shift();
+  if(!a){
+    annBusy=false;
+    if(storyPausedForAnn){ storyPausedForAnn=false; if(storyAudio && activeStoryId) storyAudio.play().catch(()=>{}); }
+    return;
+  }
+  annBusy=true;
+  if(storyAudio && !storyAudio.paused){ storyAudio.pause(); storyPausedForAnn=true; }
+  let i=0, played=false;
+  const next=()=>setTimeout(nextAnnouncement,150);
+  const playOne=()=>{
+    if(i>=a.clips.length){ next(); return; }
+    const el=new Audio(AUDIO_DIR+'phrases/'+a.clips[i++]+'.mp3');
+    let done=false;
+    const ok=()=>{ if(done) return; done=true; clearTimeout(guard); played=true; playOne(); };
+    const bad=()=>{
+      if(done) return; done=true; clearTimeout(guard); el.pause();
+      if(!played) speakTTS(a.text); // nothing heard yet: say it all with the device voice
+      next();
+    };
+    const guard=setTimeout(bad,8000);
+    el.onended=ok; el.onerror=bad;
+    el.play().catch(bad);
+  };
+  playOne();
+}
+
+function speakTTS(text){
   if(!window.speechSynthesis) return;
   const u=new SpeechSynthesisUtterance(text);
   u.lang='en-US'; u.rate=0.95; u.pitch=1.1; u.volume=1;

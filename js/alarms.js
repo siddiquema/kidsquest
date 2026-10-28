@@ -80,7 +80,7 @@ function ringAlarm(id){
   if(!ringAudioCtx) startRingSound();
   // speech after short delay so audio context is warm
   setTimeout(()=>{
-    speak(`Wake up ${kid.name}! Good morning! Time to start your wonderful day!`);
+    speak(`Wake up ${kid.name}! Good morning! Time to start your wonderful day!`,[nameClip(kid.name),'wake-up']);
   },600);
 }
 

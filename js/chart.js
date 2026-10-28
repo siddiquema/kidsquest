@@ -70,7 +70,7 @@ function cycleStar(bi,di){
   const week = weekKey();
   // merge just this one cell, so two parents ticking at once don't overwrite each other
   store.put('charts',`${chartKid}_${week}`,{ kid:chartKid, week, cells:{ [`${bi}_${di}`]:next } });
-  if(next==='gold'){ speak(`Gold star for ${kidById(chartKid)?.name}!`); }
+  if(next==='gold'){ speak(`Gold star for ${kidById(chartKid)?.name}!`,[nameClip(kidById(chartKid)?.name),'chart-gold']); }
 }
 
 function renderChartTotals(){
