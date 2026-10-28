@@ -95,6 +95,21 @@
   </div>
 </div>
 
+<!-- ═══════ CHART EDITOR ═══════ -->
+<div class="onboarding" id="chartEditor">
+  <div class="onb-inner pe-inner">
+    <div class="onb-emoji">⭐</div>
+    <div class="onb-title" id="ceTitle">Chart</div>
+    <div class="onb-sub">Rename, reorder, add or remove activities. Ticks already given stay with their activity, and this week's stars stay in the total.</div>
+    <div id="ceRows"></div>
+    <button class="onb-add" id="ceAddBtn" onclick="ceAdd()">＋ Add activity</button>
+    <label class="ce-all" id="ceAllRow"><input type="checkbox" id="ceAll"> <span id="ceAllName">Use this list for every kid</span></label>
+    <button class="onb-next" onclick="saveChartRows()">Save chart</button>
+    <button class="onb-back" onclick="ceUseDefault()">Use the original list</button>
+    <button class="onb-back" onclick="closeChartEditor()">Cancel</button>
+  </div>
+</div>
+
 <!-- ═══════ EDIT KIDS ═══════ -->
 <div class="onboarding" id="editKids">
   <div class="onb-inner">
@@ -235,6 +250,7 @@
   </div>
   <div class="chart-totals" id="chartTotals"></div>
   <div class="reset-zone">
+    <button class="reset-btn parent-only" onclick="openChartEditor()">✏️ Edit activities</button>
     <button class="reset-btn parent-only" onclick="resetChart()">↺ Clear This Week's Chart</button>
   </div>
 </div>

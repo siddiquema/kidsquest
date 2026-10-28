@@ -451,6 +451,11 @@ body{
 .pe-instr{width:100%;resize:vertical;font-size:14px;}
 .pe-topic{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:700;}
 .pe-tpl{margin-bottom:18px;}
+.ce-row{margin-bottom:8px;}
+.ce-mv{width:34px;height:38px;flex-shrink:0;border-radius:10px;border:1.5px solid rgba(255,255,255,.14);background:transparent;color:var(--muted);font-size:15px;font-weight:700;cursor:pointer;}
+.ce-mv:disabled{opacity:.25;pointer-events:none;}
+.ce-all{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--muted);margin-bottom:16px;cursor:pointer;}
+.ce-all input{width:18px;height:18px;accent-color:var(--gold);}
 .pe-tpl select{flex:1;min-width:0;color-scheme:dark;}
 body:not(.role-kid) .kid-only{display:none!important;}
 /* ── PLAY ── */
