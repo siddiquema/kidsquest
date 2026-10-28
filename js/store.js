@@ -102,7 +102,8 @@ function devName(id){
 // ═══════════════════════════════════════
 // stars:   { kid, ts, n, src:'bonus'|'skill', by }      one record per award
 // plans, skilllog: see SKILLS below
-// charts:  id `${kid}_${week}` → { kid, week, cells:{ 'behaviour_day':'gold'|'silver'|'' } }
+// charts:  id `${kid}_${week}` → { kid, week, cells:{ 'rowId_day':'gold'|'silver'|'' } }
+// chartrows: id kid → { rows:[{id,label}] }   (see CHART in chart.js)
 // timers:  id kid → { meal:{endsAt,remaining,by}, tv:{…} }
 // alarms:  id kid → { time, on, device }
 // devices: id device → { name, seen }
@@ -137,6 +138,7 @@ function startWatches(onReady){
   }));
   unwatch.push(store.watch('stars',  {field:'ts',  min:startOfWeekTs(-1)}, m=>{ STARS=m;  scheduleRender(); }));
   unwatch.push(store.watch('charts', {field:'week',min:weekKey(-1)},       m=>{ CHARTS=m; scheduleRender(); }));
+  unwatch.push(store.watch('chartrows', null, m=>{ CHARTROWS=m; scheduleRender(); }));
   unwatch.push(store.watch('timers', null, m=>{ TIMERS=m;  scheduleRender(); }));
   unwatch.push(store.watch('alarms', null, m=>{ ALARMS=m;  scheduleRender(); }));
   unwatch.push(store.watch('devices',null, m=>{ DEVICES=m; scheduleRender(); }));

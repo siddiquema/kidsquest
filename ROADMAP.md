@@ -6,7 +6,7 @@ Pending work, in rough priority order. Built so far: shared storage (Firebase), 
 
 One place to change things that currently need a code change:
 
-- **Chart activities**: rename, add, remove or reorder the behaviour chart rows.
+- ~~**Chart activities**~~: done — ✏️ Edit activities on the Chart tab (per kid, or for every kid).
 - **Timer lengths**: meal (now 25 min) and TV (now 20 min).
 - **Stars**: play stars per day (now 3), stars per skill activity (now 1) and the full-week bonus (now +2).
 - **PIN resets**: reset any kid's or parent's PIN from one screen.
