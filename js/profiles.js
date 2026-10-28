@@ -69,6 +69,19 @@ function renderWhoGrid(){
     </button>`).join('');
 }
 
+// After every PIN_TRIES wrong PINs on this device, that person's PIN waits a while
+// (1 min, then 2, 3…), so a PIN can't be found by trying them all.
+const PIN_TRIES=5, PIN_WAIT=60*1000;
+function pinFails(id){ try{ return JSON.parse(lsGet('kq_pinfail_'+id)||'null')||{n:0,until:0}; }catch{ return {n:0,until:0}; } }
+function pinWaitSecs(id){ return Math.max(0,Math.ceil((pinFails(id).until-Date.now())/1000)); }
+function notePinFail(id){
+  const f=pinFails(id); f.n++;
+  if(f.n%PIN_TRIES===0) f.until=Date.now()+PIN_WAIT*(f.n/PIN_TRIES);
+  lsSet('kq_pinfail_'+id,JSON.stringify(f));
+}
+function clearPinFails(id){ try{ localStorage.removeItem('kq_pinfail_'+id); }catch{} }
+function waitMsg(id){ const s=pinWaitSecs(id); return `Too many tries — wait ${s>90?Math.ceil(s/60)+' minutes':s+' seconds'}`; }
+
 function pickWho(id){
   const p=PROFILES[id]; if(!p) return;
   if(!p.pinHash){ enterAs(id); return; }
@@ -79,7 +92,8 @@ function pickWho(id){
   document.getElementById('pwRow').style.display='none';
   document.getElementById('pinPad').style.display='';
   document.getElementById('pinForgot').style.display='block';
-  setLockText(p.emoji, p.name, 'Enter your PIN');
+  if(pinWaitSecs(id)) setLockText(p.emoji, p.name, waitMsg(id), true);
+  else setLockText(p.emoji, p.name, 'Enter your PIN');
   updatePinDots();
 }
 
@@ -110,6 +124,7 @@ function updatePinDots(){
 
 function pinPress(n){
   if(pinEntry.length>=4) return;
+  if(pinMode==='unlock' && pinTarget && pinWaitSecs(pinTarget.id)){ pinError(waitMsg(pinTarget.id)); return; }
   pinEntry+=n;
   updatePinDots();
   if(pinEntry.length===4){ setTimeout(handlePinComplete,180); }
@@ -123,8 +138,8 @@ function pinDelete(){
 async function handlePinComplete(){
   if(!pinTarget) return;
   if(pinMode==='unlock'){
-    if(await hashPin(pinTarget.id,pinEntry)===pinTarget.pinHash) enterAs(pinTarget.id);
-    else pinError('Wrong PIN, try again');
+    if(await hashPin(pinTarget.id,pinEntry)===pinTarget.pinHash){ clearPinFails(pinTarget.id); enterAs(pinTarget.id); }
+    else { notePinFail(pinTarget.id); pinError(pinWaitSecs(pinTarget.id) ? waitMsg(pinTarget.id) : 'Wrong PIN, try again'); }
   } else if(pinMode==='setup'){
     pinFirstEntry=pinEntry; pinEntry='';
     pinMode='confirm';
@@ -133,6 +148,7 @@ async function handlePinComplete(){
   } else if(pinMode==='confirm'){
     if(pinEntry===pinFirstEntry){
       store.put('profiles',pinTarget.id,{ pinHash: await hashPin(pinTarget.id,pinEntry) });
+      clearPinFails(pinTarget.id);
       showToast('🔐 New PIN saved!');
       enterAs(pinTarget.id);
     } else {
@@ -383,7 +399,7 @@ function ekRemoveRow(list,i){
   const rows = list==='ekKids' ? ekKids : ekParents;
   if(rows.length<=1) return;
   const r=rows[i];
-  if(r.id && !confirm(`Remove ${r.name||'this person'}? ${list==='ekKids'?'Their stars, chart and alarm will be deleted when you save.':'They will no longer be able to open the parent screens.'}`)) return;
+  if(r.id && !confirm(`Remove ${r.name||'this person'}? ${list==='ekKids'?'They leave the Star Board, timers and alarms when you save.':'They will no longer be able to open the parent screens.'}`)) return;
   rows.splice(i,1);
   renderEditRows();
 }

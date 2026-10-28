@@ -248,7 +248,7 @@ function pickVoice(langs){
 // one after another) the recording is used; the device voice says `text` if a
 // clip is missing or won't play. A recorded story pauses while a clip plays.
 const AUDIO_DIR='audio/';
-let annQueue=[], annBusy=false, storyPausedForAnn=false;
+let annQueue=[], annBusy=false, storyPausedForAnn=false, annEl=null, annToken=0;
 function nameClip(name){ return 'name-'+String(name).toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
 
 function speak(text,clips){
@@ -270,14 +270,17 @@ function nextAnnouncement(){
   annBusy=true;
   if(storyAudio && !storyAudio.paused){ storyAudio.pause(); storyPausedForAnn=true; }
   let i=0, played=false;
-  const next=()=>setTimeout(nextAnnouncement,150);
+  const token=annToken;
+  const next=()=>setTimeout(()=>{ if(token===annToken) nextAnnouncement(); },150);
   const playOne=()=>{
+    if(token!==annToken) return;
     if(i>=a.clips.length){ next(); return; }
-    const el=new Audio(AUDIO_DIR+'phrases/'+a.clips[i++]+'.mp3');
+    const el=annEl=new Audio(AUDIO_DIR+'phrases/'+a.clips[i++]+'.mp3');
     let done=false;
     const ok=()=>{ if(done) return; done=true; clearTimeout(guard); played=true; playOne(); };
     const bad=()=>{
       if(done) return; done=true; clearTimeout(guard); el.pause();
+      if(token!==annToken) return;
       if(!played) speakTTS(a.text); // nothing heard yet: say it all with the device voice
       next();
     };
@@ -286,6 +289,15 @@ function nextAnnouncement(){
     el.play().catch(bad);
   };
   playOne();
+}
+
+// Silence every announcement now and drop the waiting ones (e.g. an alarm is dismissed)
+function stopAnnouncements(){
+  annToken++; annQueue=[];
+  if(annEl){ annEl.pause(); annEl=null; }
+  if(!activeStoryId || storyAudio) window.speechSynthesis?.cancel(); // never cut a story the device voice is reading
+  annBusy=false;
+  if(storyPausedForAnn){ storyPausedForAnn=false; if(storyAudio && activeStoryId) storyAudio.play().catch(()=>{}); }
 }
 
 function speakTTS(text){
