@@ -196,23 +196,35 @@ function movedRound(){
   const cells=pickN([...Array(9).keys()],n+1);
   const items=pickN(PIC_POOL,n).map((e,i)=>({e,at:cells[i]}));
   const mover=rnd(n), from=items[mover].at;
-  game.moved={ items, mover, to:cells[n] };
+  game.moved={ items, mover, from };
+  const look=2500+n*500; // more pictures, more time to look (4–5 seconds)
   drawMoved('look');
-  later(()=>{ drawMoved('hide'); speak('Close your eyes!',['moved-close']); },3000);
-  later(()=>{ items[mover].at=cells[n]; game.moved.from=from; drawMoved('ask'); speak('Which one moved? Tap it!',['moved-ask']); },4300);
+  later(()=>{ drawMoved('hide'); speak('Close your eyes!',['moved-close']); },look);
+  later(()=>{ items[mover].at=cells[n]; drawMoved('ask'); speak('Which one moved? Tap it!',['moved-ask']); },look+1300);
 }
-function drawMoved(stage){
-  const grid=Array(9).fill('');
-  if(stage!=='hide') game.moved.items.forEach((it,i)=>{ grid[it.at]=`<button class="mv-item" ${stage==='ask'?`onclick="answerMoved(${i})"`:''}>${it.e}</button>`; });
-  playArea().innerHTML=`<div class="mv-label">${stage==='look'?'👀 Look carefully…':stage==='hide'?'🙈 Close your eyes!':'👆 Which one moved?'}</div>
-    <div class="mv-grid">${grid.map(c=>`<div class="mv-cell">${c|| (stage==='hide'?'🙈':'')}</div>`).join('')}</div>`;
+// stage: 'look' | 'hide' | 'ask' | 'right' | 'wrong' (after a tap; picked = the tapped item)
+function drawMoved(stage,picked){
+  const m=game.moved, grid=Array(9).fill('');
+  if(stage!=='hide') m.items.forEach((it,i)=>{
+    const cls = stage==='right'||stage==='wrong' ? (i===m.mover?'right':i===picked?'wrong':'') : '';
+    // only tappable while asking; buttons are marked with their item, not their place on the grid
+    grid[it.at] = stage==='ask'
+      ? `<button class="mv-item" onclick="answerMoved(${i})">${it.e}</button>`
+      : `<div class="mv-item ${cls}">${it.e}</div>`;
+  });
+  const done=stage==='right'||stage==='wrong';
+  const label={ look:'👀 Look carefully…', hide:'🙈 Close your eyes!', ask:'👆 Which one moved?',
+    right:'✅ Yes! You spotted it!', wrong:'💡 Good try! The green one moved' }[stage];
+  playArea().innerHTML=`<div class="mv-label">${label}</div>
+    <div class="mv-grid">${grid.map((c,ci)=>`<div class="mv-cell ${done&&ci===m.from?'mv-from':''}">${c|| (stage==='hide'?'🙈':'')}</div>`).join('')}</div>
+    ${done?'<div class="mv-hint">The dotted box shows where it was before.</div>':''}`;
 }
 function answerMoved(i){
   if(game.moved.answered) return; game.moved.answered=true;
   const right=i===game.moved.mover;
   if(right){ game.score++; sayPraise(); } else speak('Good try! This one moved.',['moved-try']);
-  playArea().querySelectorAll('.mv-item').forEach((b,j)=>{ if(j===game.moved.mover) b.classList.add('right'); else if(j===i) b.classList.add('wrong'); });
-  later(()=>{ game.round++; movedRound(); },1600);
+  drawMoved(right?'right':'wrong',i);
+  later(()=>{ game.round++; movedRound(); },2600);
 }
 
 // ── count it ──
