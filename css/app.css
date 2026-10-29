@@ -503,7 +503,10 @@ body:not(.role-kid) .kid-only{display:none!important;}
 .mv-label{text-align:center;font-family:'Fredoka One',cursive;font-size:22px;margin-bottom:12px;}
 .mv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:360px;margin:0 auto;}
 .mv-cell{aspect-ratio:1;border-radius:var(--r-sm);background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:40px;}
-.mv-item{width:100%;height:100%;border-radius:var(--r-sm);border:2px solid transparent;background:none;font-size:48px;cursor:pointer;}
+.mv-item{width:100%;height:100%;border-radius:var(--r-sm);border:2px solid transparent;background:none;font-size:48px;display:flex;align-items:center;justify-content:center;}
+button.mv-item{cursor:pointer;}
+.mv-from{outline:3px dashed var(--green);outline-offset:-6px;}
+.mv-hint{text-align:center;font-size:13px;font-weight:600;color:var(--muted);margin-top:12px;}
 .cnt-items{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;font-size:46px;margin-bottom:14px;}
 .cnt-opts{display:flex;justify-content:center;gap:14px;}
 .cnt-opt{width:86px;height:86px;border-radius:50%;border:2px solid rgba(255,255,255,.15);background:var(--card);color:var(--text);font-family:'Fredoka One',cursive;font-size:36px;cursor:pointer;}
