@@ -23,13 +23,13 @@ function chartDoc(kid,offset=0){ return CHARTS[`${kid}_${weekKey(offset)}`]; }
 function chartCell(kid,bi,di){ return chartDoc(kid)?.cells?.[`${bi}_${di}`] || ''; }
 // day = 0..6 for one day, or null for the whole week
 function chartCount(kid,offset=0,day=null){
-  let gold=0, silver=0;
+  let gold=0, silver=0, no=0;
   const cells=chartDoc(kid,offset)?.cells||{};
   for(const k in cells){
     if(day!==null && +k.split('_')[1]!==day) continue;
-    if(cells[k]==='gold') gold++; else if(cells[k]==='silver') silver++;
+    if(cells[k]==='gold') gold++; else if(cells[k]==='silver') silver++; else if(cells[k]==='no') no++;
   }
-  return {gold,silver};
+  return {gold,silver,no};
 }
 
 // ── combined totals per kid (bonus/skill stars + chart stars) ──

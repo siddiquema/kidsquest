@@ -31,9 +31,9 @@ function defaultChartRows(){ return BEHAVIORS.map((label,i)=>({ id:String(i), la
 function chartRows(kid){ const r=CHARTROWS[kid]?.rows; return Array.isArray(r)&&r.length ? r : defaultChartRows(); }
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-// cycle order: none → gold → silver → none
-const STAR_CYCLE = ['', 'gold', 'silver'];
-const STAR_ICON  = { '':'—', gold:'🥇', silver:'🥈' };
+// cycle order: not filled in → gold star → silver star → ✗ not done → not filled in
+const STAR_CYCLE = ['', 'gold', 'silver', 'no'];
+const STAR_ICON  = { '':'–', gold:'★', silver:'★', no:'✗' };
 
 // One record per kid per week (Sunday-anchored), so last week stays for comparison
 let chartKid = null;
@@ -63,9 +63,9 @@ function renderChart(){
     html += `<div class="cg-cell cg-rowhead ${alt?'alt':''}">${esc(row.label)}</div>`;
     DAYS.forEach((d,di)=>{
       const val = chartCell(chartKid,row.id,di);
-      const dashCls = val==='' ? 'cg-dash' : '';
-      html += `<div class="cg-cell cg-star ${alt?'alt':''} ${di===todayCol?'today-col':''} ${dashCls}"
-        onclick="cycleStar('${row.id}',${di})">${STAR_ICON[val]||'—'}</div>`;
+      const cls = STAR_ICON[val] ? (val ? 'cg-'+val : 'cg-dash') : 'cg-dash';
+      html += `<div class="cg-cell cg-star ${alt?'alt':''} ${di===todayCol?'today-col':''} ${cls}"
+        onclick="cycleStar('${row.id}',${di})">${STAR_ICON[val]||'–'}</div>`;
     });
   });
   document.getElementById('chartGrid').innerHTML = html;
@@ -85,8 +85,9 @@ function cycleStar(rowId,di){
 function renderChartTotals(){
   const c=chartCount(chartKid,0);
   document.getElementById('chartTotals').innerHTML = `
-    <div class="ct-pill">🥇 <span class="ct-big">${c.gold}</span> gold</div>
-    <div class="ct-pill">🥈 <span class="ct-big" style="color:var(--silver)">${c.silver}</span> silver</div>
+    <div class="ct-pill"><span class="cg-gold">★</span> <span class="ct-big">${c.gold}</span> gold</div>
+    <div class="ct-pill"><span class="cg-silver">★</span> <span class="ct-big" style="color:var(--silver)">${c.silver}</span> silver</div>
+    <div class="ct-pill"><span class="cg-no">✗</span> <span class="ct-big" style="color:var(--meal)">${c.no}</span> not done</div>
     <div class="ct-pill">⭐ <span class="ct-big" style="color:var(--green)">${fmtStars(chartStars(c))}</span> stars</div>`;
 }
 
