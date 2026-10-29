@@ -225,7 +225,7 @@
 
 <!-- TABS -->
 <div class="tabs">
-  <button class="tab-btn active"  onclick="switchTab('leaderboard',this)">🏅 Stars</button>
+  <button class="tab-btn active"  onclick="switchTab('leaderboard',this)">⭐ Stars</button>
   <button class="tab-btn"         onclick="switchTab('chart',this)">📋 Chart</button>
   <button class="tab-btn"         onclick="switchTab('skills',this)">🌱 Skills</button>
   <button class="tab-btn"         onclick="switchTab('play',this)">🎮 Play</button>
@@ -250,8 +250,8 @@
   <div class="sec-label">Weekly behavior chart ⭐</div>
   <div class="chart-kid-tabs" id="chartKidTabs"></div>
   <div class="chart-legend">
-    <span class="leg"><span class="leg-ic">🥇</span> Gold</span>
-    <span class="leg"><span class="leg-ic">🥈</span> Silver (½)</span>
+    <span class="leg"><span class="leg-ic"><span class="star-ic gold">⭐</span></span> Gold</span>
+    <span class="leg"><span class="leg-ic"><span class="star-ic silver">⭐</span></span> Silver (½)</span>
     <span class="leg"><span class="leg-ic" style="color:var(--muted)">—</span> None</span>
     <span class="leg-hint parent-only">Tap a cell to change</span>
   </div>
@@ -283,7 +283,7 @@
 
 <!-- TIMERS PANEL -->
 <div class="panel" id="panel-timers">
-  <div class="sec-label">Tap ▶ to start · ⏸ to pause · ↺ to reset · − / + changes the length before starting · ✅ when the meal is done (🥇 within 80% of the time · 🥈 before it runs out)</div>
+  <div class="sec-label">Tap ▶ to start · ⏸ to pause · ↺ to reset · − / + changes the length before starting · ✅ when the meal is done (⭐ gold within 80% of the time · silver ⭐ before it runs out)</div>
   <label class="audio-toggle">
     <input type="checkbox" id="timerAudio" onchange="setTimerAudio(this.checked)">
     <span>🔊 Audio reminders on this device</span>

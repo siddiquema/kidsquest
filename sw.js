@@ -2,7 +2,7 @@
 // App files: network first (so updates arrive), cached copy when offline.
 // Fonts and the Firebase library: cached once, they're versioned.
 // Firebase data traffic is left alone — Firestore has its own offline cache.
-const CACHE = 'kq-v2';
+const CACHE = 'kq-v3';
 const CORE = ['./', './index.html', './manifest.json', './firebase-config.js', './icon-192.png', './icon-512.png',
   './css/app.css',
   './js/util.js', './js/store.js', './data/stories.js', './data/plans.js', './data/quiz.js', './js/profiles.js',

@@ -45,7 +45,7 @@ function renderBoard(){
   let goldT=0,silverT=0,bonusT=0, goldW=0,silverW=0,bonusW=0, lastW=0;
   KIDS.forEach(k=>{
     const ct=chartCount(k.id,0,today), cw=chartCount(k.id,0);
-    // meal medals show with the chart's gold/silver; the rest of the stars count as ➕
+    // meal stars show with the chart's gold/silver; the rest of the stars count as ➕
     const mt=mealMedals(k.id,startOfTodayTs()), mw=mealMedals(k.id,startOfWeekTs(),startOfWeekTs(1));
     goldT+=ct.gold+mt.gold; silverT+=ct.silver+mt.silver; bonusT+=starSum(k.id,startOfTodayTs())-mt.value;
     goldW+=cw.gold+mw.gold; silverW+=cw.silver+mw.silver; bonusW+=starSum(k.id,startOfWeekTs(),startOfWeekTs(1))-mw.value;
@@ -60,14 +60,14 @@ function renderBoard(){
       <div class="ds-label">Today</div>
       <div class="ds-num">${fmtStars(tToday)}</div>
       <div class="ds-unit">family stars</div>
-      <div class="ds-break">🥇 ${goldT} &nbsp; 🥈 ${silverT} &nbsp; ➕ ${bonusT}</div>
+      <div class="ds-break">${STAR_HTML.gold} ${goldT} &nbsp; ${STAR_HTML.silver} ${silverT} &nbsp; ➕ ${bonusT}</div>
       <div class="ds-leader">${tToday>0?'✨ Every star counts!':'No stars yet today'}</div>
     </div>
     <div class="ds-card week">
       <div class="ds-label">This Week</div>
       <div class="ds-num">${fmtStars(tWeek)}</div>
       <div class="ds-unit">family stars</div>
-      <div class="ds-break">🥇 ${goldW} &nbsp; 🥈 ${silverW} &nbsp; ➕ ${bonusW}</div>
+      <div class="ds-break">${STAR_HTML.gold} ${goldW} &nbsp; ${STAR_HTML.silver} ${silverW} &nbsp; ➕ ${bonusW}</div>
       <div class="ds-leader">Last week: ${fmtStars(lastW)}</div>
     </div>`;
 

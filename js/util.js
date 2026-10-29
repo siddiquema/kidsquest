@@ -18,6 +18,10 @@ function pickN(a,n){ return shuffle(a).slice(0,n); }
 //  TOAST
 // ═══════════════════════════════════════
 let toastTmr;
+// Star icons used everywhere instead of medals. Stored values stay 'gold' / 'silver',
+// so existing families' charts and meal stars show the new icons with no data change.
+const STAR_HTML = { gold:'<span class="star-ic gold">⭐</span>', silver:'<span class="star-ic silver">⭐</span>' };
+
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
