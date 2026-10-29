@@ -264,6 +264,107 @@ async function deviceSignIn(){
 }
 
 // ═══════════════════════════════════════
+//  NEW FAMILY  (sign up with a one-time family code, then the usual onboarding)
+// ═══════════════════════════════════════
+// Bump when the consent text in index.html changes; each family records the version it agreed to.
+const CONSENT_VERSION = 1;
+
+function showNewFamily(){
+  nfMode();
+  document.getElementById('nfDevice').value = lsGet('kq_device_name') || '';
+  document.getElementById('nfError').textContent='';
+  document.getElementById('deviceSetup').classList.remove('show');
+  document.getElementById('newFamily').classList.add('show');
+}
+// Already signed in (a login with no family yet)? Then there's no email/password to ask for.
+function nfMode(){
+  const email=store.email();
+  document.querySelectorAll('.nf-login').forEach(el=>el.style.display=email?'none':'');
+  const si=document.getElementById('nfSignedIn');
+  si.style.display=email?'':'none';
+  si.textContent=email?`Signed in as ${email}. This login isn't part of a family yet.`:'';
+  document.getElementById('nfBack').textContent = email ? '← Sign out and use another login' : '← I already have a login';
+}
+async function newFamilyBack(){
+  document.getElementById('newFamily').classList.remove('show');
+  if(store.email()){ await store.signOut(); location.reload(); return; }
+  showDeviceSetup();
+}
+function cleanCode(v){ return String(v).toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
+async function createNewFamily(){
+  const err=document.getElementById('nfError');
+  const signedIn=!!store.email();
+  const email=document.getElementById('nfEmail').value.trim();
+  const pw=document.getElementById('nfPassword').value;
+  const code=cleanCode(document.getElementById('nfCode').value);
+  const name=document.getElementById('nfName').value.trim();
+  const dev=document.getElementById('nfDevice').value.trim();
+  err.textContent =
+      !signedIn && (!email||!pw) ? 'Please enter your email and a password'
+    : !signedIn && pw.length<6   ? 'The password needs 6 or more characters'
+    : !code                      ? 'Please enter the family code'
+    : !name || !dev              ? 'Please fill in every box'
+    : !document.getElementById('nfConsent').checked ? 'Please read the note and tick the box'
+    : '';
+  if(err.textContent) return;
+  const btn=document.getElementById('nfBtn');
+  btn.disabled=true; btn.textContent='Creating…';
+  try{
+    if(!signedIn){ await store.signUp(email,pw); document.getElementById('nfPassword').value=''; }
+    const ok=await store.checkPilotCode(code);
+    if(ok!=='ok'){
+      err.textContent = ok==='used' ? 'That family code has already been used' : 'That family code isn’t right — check it with Siddique';
+      return;
+    }
+    await store.createFamily({ name, code, consentVersion:CONSENT_VERSION });
+    lsSet('kq_device_name',dev);
+    document.getElementById('newFamily').classList.remove('show');
+    startApp(); // no kids yet, so onboarding opens
+  }catch(e){
+    console.error(e);
+    err.textContent = e.code==='auth/email-already-in-use' ? 'That email already has a login — go back and sign in'
+      : e.code==='auth/invalid-email' ? 'That email doesn’t look right'
+      : e.code==='auth/weak-password' ? 'Please choose a longer password'
+      : e.code==='auth/network-request-failed' || e.code==='unavailable' ? 'No internet connection'
+      : 'Something went wrong — please try again';
+  }finally{
+    nfMode(); // signed up but the code was wrong: next try needs only the code
+    btn.disabled=false; btn.textContent='Create our family';
+  }
+}
+
+// A one-time code for another family (shown in Edit family, for the 'home' family only)
+async function makePilotCode(){
+  const btn=document.getElementById('pcBtn'); btn.disabled=true;
+  try{
+    const code=await store.makePilotCode();
+    const link=location.origin+location.pathname;
+    const out=document.getElementById('pcOut');
+    out.innerHTML=`Family code<span class="code">${code}</span>Open <b>${esc(link)}</b>, tap <b>Start a family</b> and enter this code. It works once.
+      <button class="onb-add" onclick="copyPilotCode()">📋 Copy message</button>`;
+    out.dataset.msg=`Here's your KidQuest family code: ${code}
+Open ${link} on your phone, tap "New to KidQuest? Start a family" and enter the code. It works once.`;
+    out.style.display='';
+  }catch(e){
+    console.error(e); showToast('⚠️ Couldn’t make a code — check the internet');
+  }finally{ btn.disabled=false; }
+}
+function copyPilotCode(){
+  const msg=document.getElementById('pcOut').dataset.msg;
+  if(!navigator.clipboard){ showToast('Copy isn’t available — write the code down'); return; }
+  navigator.clipboard.writeText(msg).then(()=>showToast('📋 Copied — paste it in a message'),()=>showToast('Copy failed — write the code down'));
+}
+
+async function signOutDevice(){
+  if(!confirm('Sign this device out of KidQuest? Your family’s data stays safe, and a parent can sign in again.')) return;
+  closeEditKids();
+  ssSet('kq_who',null);
+  try{ await store.signOut(); }catch(e){ console.error(e); }
+  location.reload();
+}
+
+// ═══════════════════════════════════════
 //  FAMILY SETUP  (splash → onboarding → who's here)
 // ═══════════════════════════════════════
 const PIN_RE=/^\d{4}$/;
@@ -366,6 +467,10 @@ function openEditKids(){
   ekParents = PARENTS.map(p=>({ id:p.id, name:p.name, emoji:p.emoji, color:p.color, pin:'' }));
   document.getElementById('ekDevice').value = lsGet('kq_device_name') || '';
   document.getElementById('ekAutoLock').value = String(autoLockMins());
+  const fb=store.kind==='firebase';
+  document.querySelectorAll('#editKids .fb-only').forEach(el=>el.style.display=fb?'':'none');
+  document.querySelector('#editKids .home-only').style.display = fb && FAMILY_ID==='home' ? '' : 'none';
+  document.getElementById('pcOut').style.display='none';
   renderEditRows();
   document.getElementById('editKids').classList.add('show');
 }

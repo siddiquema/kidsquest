@@ -10,7 +10,11 @@
 // Writes show up locally straight away (even offline) and reach other devices when online.
 const FB_CONFIG  = window.KQ_FIREBASE_CONFIG || null;
 const FB_VERSION = '10.14.1';
-const FAMILY_ID  = 'home';
+// Which family this device belongs to: 'home' (the first family) unless the
+// signed-in login says otherwise (users/{uid} → familyId, set in startApp).
+let FAMILY_ID = 'home';
+// Story packs this family sees (families/{id}.packs). New families start with none.
+let FAMILY_PACKS = ['home'];
 let store = null;
 
 function isPlainObj(v){ return !!v && typeof v==='object' && !Array.isArray(v); }
@@ -51,6 +55,7 @@ function makeLocalStore(){
     },
     add(col,data){ return this.put(col,newId(),data,false); },
     remove(col,id){ if(db[col]) delete db[col][id]; persist(col); return Promise.resolve(); },
+    watchFamily(cb){ setTimeout(()=>cb({ packs:['home'] }),0); return ()=>{}; },
   };
 }
 
@@ -64,11 +69,84 @@ async function makeFirebaseStore(){
   // Offline cache shared by all tabs: keeps working with no internet and syncs later
   const db=fs.initializeFirestore(app,{ localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
   const col=c=>fs.collection(db,'families',FAMILY_ID,c);
+  const ref=(...path)=>fs.doc(db,...path);
   const warn=e=>{ console.error('sync',e); };
+  const famKey=()=>'kq_family_'+auth.currentUser.uid;
+  // One of the original two logins, opening this version for the first time:
+  // record it as an owner of 'home' (the rules still let these two in by UID).
+  async function joinHome(uid){
+    try{
+      const fam=await fs.getDoc(ref('families','home'));
+      const b=fs.writeBatch(db);
+      if(!fam.exists()) b.set(ref('families','home'),{ name:'Home', createdBy:uid, created:Date.now(), packs:['home'] });
+      b.set(ref('families','home','members',uid),{ role:'owner', joined:Date.now(), via:'migrated' });
+      b.set(ref('users',uid),{ familyId:'home' });
+      await b.commit();
+      return true;
+    }catch(e){
+      if(e.code==='permission-denied') return false; // a newer login with no family yet
+      throw e;
+    }
+  }
   return {
     kind:'firebase',
     currentUser(){ return new Promise(res=>{ const stop=authMod.onAuthStateChanged(auth,u=>{ stop(); res(u); }); }); },
+    email(){ return auth.currentUser?.email || ''; },
     signIn(email,pw){ return authMod.signInWithEmailAndPassword(auth,email,pw); },
+    signUp(email,pw){ return authMod.createUserWithEmailAndPassword(auth,email,pw); },
+    // Leaves the family on this device and wipes its offline copy of the data
+    async signOut(){
+      try{ localStorage.removeItem(famKey()); }catch{}
+      await authMod.signOut(auth);
+      await fs.terminate(db);
+      try{ await fs.clearIndexedDbPersistence(db); }catch(e){ console.warn('cache',e); } // fails while another KidQuest tab is open
+    },
+    // The family this login belongs to, or null if it has none yet
+    async findFamily(){
+      const uid=auth.currentUser.uid;
+      try{
+        const u=await fs.getDoc(ref('users',uid));
+        if(u.exists()){ lsSet(famKey(),u.data().familyId); return u.data().familyId; }
+      }catch(e){
+        if(e.code==='permission-denied') return 'home'; // older rules: only the original logins get in, to 'home'
+        // offline: the family this device used last. Only the original devices can
+        // have none saved (new families save it when they sign in), so that means 'home'.
+        return lsGet(famKey()) || 'home';
+      }
+      if(await joinHome(uid)){ lsSet(famKey(),'home'); return 'home'; }
+      // another device with this login may have just joined 'home' at the same moment
+      const again=await fs.getDoc(ref('users',uid));
+      if(again.exists()){ lsSet(famKey(),again.data().familyId); return again.data().familyId; }
+      return null;
+    },
+    // Is this pilot code real and still unused? 'ok' | 'missing' | 'used'
+    async checkPilotCode(code){
+      const c=await fs.getDoc(ref('pilotCodes',code));
+      return !c.exists() ? 'missing' : c.data().usedBy ? 'used' : 'ok';
+    },
+    // New family: family doc, me as owner, my pointer to it, and the pilot code used up — all or nothing
+    async createFamily({name,code,consentVersion}){
+      const uid=auth.currentUser.uid, now=Date.now();
+      const fid=fs.doc(fs.collection(db,'families')).id;
+      const b=fs.writeBatch(db);
+      b.set(ref('families',fid),{ name, createdBy:uid, created:now, packs:[], pilotCode:code, consent:{ by:uid, at:now, version:consentVersion } });
+      b.set(ref('families',fid,'members',uid),{ role:'owner', joined:now, via:'create' });
+      b.set(ref('users',uid),{ familyId:fid });
+      b.update(ref('pilotCodes',code),{ usedBy:uid, family:fid });
+      await b.commit();
+      lsSet(famKey(),fid);
+      return fid;
+    },
+    // A single-use code that lets one more family sign up (made from the 'home' family)
+    async makePilotCode(){
+      const abc='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      const code=[...crypto.getRandomValues(new Uint8Array(10))].map(n=>abc[n%abc.length]).join('');
+      await fs.setDoc(ref('pilotCodes',code),{ by:auth.currentUser.uid, created:Date.now(), usedBy:null, family:null });
+      return code;
+    },
+    watchFamily(cb){
+      return fs.onSnapshot(ref('families',FAMILY_ID),d=>cb(d.data()||{}),e=>{ console.warn('family',e); cb({}); });
+    },
     // Re-checks the password this device signed in with (to reset a forgotten parent PIN)
     verifyPassword(pw){ return authMod.signInWithEmailAndPassword(auth,auth.currentUser.email,pw); },
     watch(c,since,cb){
@@ -129,6 +207,11 @@ function startWatches(onReady){
   unwatch.forEach(u=>u&&u()); unwatch=[];
   watchWeek=weekKey();
   let ready=false;
+  unwatch.push(store.watchFamily(f=>{
+    const packs = f.packs || (FAMILY_ID==='home' ? ['home'] : []);
+    if(String(packs)===String(FAMILY_PACKS)) return; // don't redraw (and stop) a playing story for nothing
+    FAMILY_PACKS = packs; renderStories();
+  }));
   unwatch.push(store.watch('profiles',null,(m,fromCache)=>{
     PROFILES=m; rebuildProfiles();
     // a new device's first answer may come from an empty cache — wait for the server

@@ -40,9 +40,17 @@ function renderAll(){
 // ═══════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════
-function startApp(){
-  registerDevice();
+async function startApp(){
   showSplash();
+  if(store.kind==='firebase'){
+    let fid;
+    try{ fid=await store.findFamily(); }
+    catch(e){ console.error(e); showSplashError("Can't reach KidQuest. Check the internet and reload."); return; }
+    if(!fid){ hideSplash(); showNewFamily(); return; } // signed in, but no family yet
+    FAMILY_ID=fid;
+    if(fid!=='home'){ FAMILY_PACKS=[]; renderStories(); }
+  }
+  registerDevice();
   startWatches(()=>{
     hideSplash();
     if(!KIDS.length && !PARENTS.length){ showOnboarding(); return; }
@@ -50,6 +58,11 @@ function startApp(){
     if(saved && PROFILES[saved]){ currentWho={ id:saved, type:PROFILES[saved].type }; renderAll(); }
     else showWho();
   });
+}
+
+function showSplashError(msg){
+  document.querySelector('.splash-tag').textContent=msg;
+  document.querySelector('.splash-dots').style.display='none';
 }
 
 async function boot(){
@@ -62,8 +75,7 @@ async function boot(){
   }catch(e){
     console.error(e);
     await minSplash;
-    document.querySelector('.splash-tag').textContent="Can't reach KidQuest. Check the internet and reload.";
-    document.querySelector('.splash-dots').style.display='none';
+    showSplashError("Can't reach KidQuest. Check the internet and reload.");
     return;
   }
   await minSplash;

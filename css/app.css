@@ -395,6 +395,13 @@ body{
 .ek-lock{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:12px;font-weight:700;color:var(--muted);}
 .ek-lock select{color-scheme:dark;}
 .ek-hint{font-size:12px;color:var(--muted);text-align:left;line-height:1.4;}
+.consent-box{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:var(--r-sm);padding:4px 14px;margin-bottom:14px;text-align:left;font-size:13px;line-height:1.5;color:var(--muted);font-weight:600;}
+.consent-box b{color:var(--text);}
+.consent-ok{display:flex;gap:10px;align-items:flex-start;text-align:left;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;cursor:pointer;}
+.consent-ok input{width:20px;height:20px;flex-shrink:0;margin:0;accent-color:var(--gold);}
+.pilot-code{background:rgba(255,209,102,.08);border:1.5px dashed var(--gold);border-radius:var(--r-sm);padding:12px 14px;font-size:13px;line-height:1.5;font-weight:600;color:var(--text);user-select:text;-webkit-user-select:text;}
+.pilot-code .code{font-family:'Fredoka One',cursive;font-size:24px;letter-spacing:2px;color:var(--gold);display:block;margin:4px 0;}
+.pilot-code button{margin-top:8px;}
 .alarm-device-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:700;}
 .alarm-device{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(251,146,60,.25);border-radius:var(--r-sm);color:var(--text);font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;padding:7px 10px;color-scheme:dark;}
 /* ── SKILLS ── */

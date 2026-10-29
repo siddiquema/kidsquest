@@ -134,6 +134,15 @@
         </select>
       </label>
       <div class="ek-hint">Without a touch for that long, a parent's screens go back to Who's here. Useful on the kids' phone and the TV.</div>
+      <button class="onb-add fb-only" onclick="signOutDevice()">Sign out of this device</button>
+    </div>
+    <div class="home-only">
+      <div class="ek-section">Invite a new family</div>
+      <div class="ob-kid-list">
+        <div class="ek-hint">Makes a one-time family code. Send it with the link; it works for one family only.</div>
+        <button class="onb-add" id="pcBtn" onclick="makePilotCode()">＋ Make a family code</button>
+        <div class="pilot-code" id="pcOut" style="display:none;"></div>
+      </div>
     </div>
     <button class="onb-next" onclick="saveEditKids()">Save changes</button>
     <button class="onb-back" onclick="closeEditKids()">Cancel</button>
@@ -153,6 +162,34 @@
     </div>
     <div class="lock-sub err" id="dsError"></div>
     <button class="onb-next" id="dsBtn" onclick="deviceSignIn()">Sign in</button>
+    <button class="onb-back" onclick="showNewFamily()">New to KidQuest? Start a family →</button>
+  </div>
+</div>
+
+<!-- ═══════ NEW FAMILY (sign up with a pilot code) ═══════ -->
+<div class="onboarding" id="newFamily">
+  <div class="onb-inner">
+    <div class="onb-emoji">🏡</div>
+    <div class="onb-title">Start a new family</div>
+    <div class="onb-sub">KidQuest is in a small trial, so you need a family code from Siddique to start.</div>
+    <div class="ob-kid-list">
+      <input class="ob-input nf-login" id="nfEmail" type="email" placeholder="Parent's email" autocomplete="username">
+      <input class="ob-input nf-login" id="nfPassword" type="password" placeholder="Choose a password (6 or more characters)" autocomplete="new-password">
+      <div class="ek-hint" id="nfSignedIn" style="display:none;"></div>
+      <input class="ob-input" id="nfCode" type="text" maxlength="14" placeholder="Family code" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <input class="ob-input" id="nfName" type="text" maxlength="30" placeholder="Family name (e.g. The Khans)" autocomplete="off">
+      <input class="ob-input" id="nfDevice" type="text" maxlength="24" placeholder="Name this device (e.g. Mum's phone)">
+    </div>
+    <div class="ek-section">Before you start</div>
+    <div class="consent-box">
+      <p>KidQuest keeps <b>only what it needs</b>: your email (for signing in), each child's <b>first name or nickname</b>, age, picture emoji and PIN (stored scrambled), and their stars, charts, plans, timers and alarms. No photos, surnames, schools or location, no ads and no tracking.</p>
+      <p>It is stored in <b>Google Firebase</b>. Only the parents in your family can see it, plus <b>Siddique</b>, who runs KidQuest and can see it as the admin, only when helping you.</p>
+      <p>This is a <b>free trial</b>; you'll be told before it ends. To delete all your family's data, ask Siddique: it's deleted within 7 days.</p>
+    </div>
+    <label class="consent-ok"><input type="checkbox" id="nfConsent"> I'm the parent of the children I'll add, and I agree to this.</label>
+    <div class="lock-sub err" id="nfError"></div>
+    <button class="onb-next" id="nfBtn" onclick="createNewFamily()">Create our family</button>
+    <button class="onb-back" id="nfBack" onclick="newFamilyBack()">← I already have a login</button>
   </div>
 </div>
 
