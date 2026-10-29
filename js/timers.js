@@ -106,7 +106,7 @@ function finishMeal(kid){
   if(medal){
     store.add('stars',{ kid, ts:Date.now(), n:medal==='gold'?1:SILVER_VALUE, src:'meal', medal, mins, by:currentWho?.id||null });
     speak(`${medal==='gold'?'Gold':'Silver'} star, ${name}! You finished your food in ${mins} minutes.`,[nameClip(name),'meal-'+medal]);
-    showToast(`${medal==='gold'?'🥇':'🥈'} ${name} finished in ${mins} min`);
+    showToast(`${medal==='gold'?'⭐ Gold':'★ Silver'} star — ${name} finished in ${mins} min`);
   } else if(s.expired){
     speak(`Well done for finishing, ${name}. Try to beat the timer next time!`,[nameClip(name),'meal-late']);
     showToast(`${name} finished after the timer — no star this time`);
