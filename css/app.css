@@ -628,3 +628,7 @@ body:not(.role-kid) .kid-only{display:none!important;}
   .app-wrapper{max-width:1500px;}
   html{font-size:20px;}
 }
+
+/* star icons (replace medals): silver is a greyed-out star */
+.star-ic{display:inline-block;line-height:1;}
+.star-ic.silver{filter:grayscale(1) brightness(1.35);opacity:.9;}

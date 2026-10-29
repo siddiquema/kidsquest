@@ -33,7 +33,7 @@ function chartRows(kid){ const r=CHARTROWS[kid]?.rows; return Array.isArray(r)&&
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 // cycle order: none → gold → silver → none
 const STAR_CYCLE = ['', 'gold', 'silver'];
-const STAR_ICON  = { '':'—', gold:'🥇', silver:'🥈' };
+const STAR_ICON  = { '':'—', gold:STAR_HTML.gold, silver:STAR_HTML.silver };
 
 // One record per kid per week (Sunday-anchored), so last week stays for comparison
 let chartKid = null;
@@ -85,8 +85,8 @@ function cycleStar(rowId,di){
 function renderChartTotals(){
   const c=chartCount(chartKid,0);
   document.getElementById('chartTotals').innerHTML = `
-    <div class="ct-pill">🥇 <span class="ct-big">${c.gold}</span> gold</div>
-    <div class="ct-pill">🥈 <span class="ct-big" style="color:var(--silver)">${c.silver}</span> silver</div>
+    <div class="ct-pill">${STAR_HTML.gold} <span class="ct-big">${c.gold}</span> gold</div>
+    <div class="ct-pill">${STAR_HTML.silver} <span class="ct-big" style="color:var(--silver)">${c.silver}</span> silver</div>
     <div class="ct-pill">⭐ <span class="ct-big" style="color:var(--green)">${fmtStars(chartStars(c))}</span> stars</div>`;
 }
 
