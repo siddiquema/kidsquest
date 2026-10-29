@@ -102,7 +102,7 @@ function devName(id){
 // ═══════════════════════════════════════
 // stars:   { kid, ts, n, src:'bonus'|'skill', by }      one record per award
 // plans, skilllog: see SKILLS below
-// charts:  id `${kid}_${week}` → { kid, week, cells:{ 'rowId_day':'gold'|'silver'|'' } }
+// charts:  id `${kid}_${week}` → { kid, week, cells:{ 'rowId_day':'gold'|'silver'|'no'|'' }   (no = ✗ not done) }
 // chartrows: id kid → { rows:[{id,label}] }   (see CHART in chart.js)
 // timers:  id kid → { meal:{endsAt,remaining,by}, tv:{…} }
 // alarms:  id kid → { time, on, device }

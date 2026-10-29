@@ -23,13 +23,13 @@ function chartDoc(kid,offset=0){ return CHARTS[`${kid}_${weekKey(offset)}`]; }
 function chartCell(kid,bi,di){ return chartDoc(kid)?.cells?.[`${bi}_${di}`] || ''; }
 // day = 0..6 for one day, or null for the whole week
 function chartCount(kid,offset=0,day=null){
-  let gold=0, silver=0;
+  let gold=0, silver=0, no=0;
   const cells=chartDoc(kid,offset)?.cells||{};
   for(const k in cells){
     if(day!==null && +k.split('_')[1]!==day) continue;
-    if(cells[k]==='gold') gold++; else if(cells[k]==='silver') silver++;
+    if(cells[k]==='gold') gold++; else if(cells[k]==='silver') silver++; else if(cells[k]==='no') no++;
   }
-  return {gold,silver};
+  return {gold,silver,no};
 }
 
 // ── combined totals per kid (bonus/skill stars + chart stars) ──
@@ -45,7 +45,7 @@ function renderBoard(){
   let goldT=0,silverT=0,bonusT=0, goldW=0,silverW=0,bonusW=0, lastW=0;
   KIDS.forEach(k=>{
     const ct=chartCount(k.id,0,today), cw=chartCount(k.id,0);
-    // meal medals show with the chart's gold/silver; the rest of the stars count as ➕
+    // meal gold/silver stars show with the chart's; the rest of the stars count as ➕
     const mt=mealMedals(k.id,startOfTodayTs()), mw=mealMedals(k.id,startOfWeekTs(),startOfWeekTs(1));
     goldT+=ct.gold+mt.gold; silverT+=ct.silver+mt.silver; bonusT+=starSum(k.id,startOfTodayTs())-mt.value;
     goldW+=cw.gold+mw.gold; silverW+=cw.silver+mw.silver; bonusW+=starSum(k.id,startOfWeekTs(),startOfWeekTs(1))-mw.value;
@@ -60,14 +60,14 @@ function renderBoard(){
       <div class="ds-label">Today</div>
       <div class="ds-num">${fmtStars(tToday)}</div>
       <div class="ds-unit">family stars</div>
-      <div class="ds-break">🥇 ${goldT} &nbsp; 🥈 ${silverT} &nbsp; ➕ ${bonusT}</div>
+      <div class="ds-break"><span class="cg-gold">★</span> ${goldT} &nbsp; <span class="cg-silver">★</span> ${silverT} &nbsp; ➕ ${bonusT}</div>
       <div class="ds-leader">${tToday>0?'✨ Every star counts!':'No stars yet today'}</div>
     </div>
     <div class="ds-card week">
       <div class="ds-label">This Week</div>
       <div class="ds-num">${fmtStars(tWeek)}</div>
       <div class="ds-unit">family stars</div>
-      <div class="ds-break">🥇 ${goldW} &nbsp; 🥈 ${silverW} &nbsp; ➕ ${bonusW}</div>
+      <div class="ds-break"><span class="cg-gold">★</span> ${goldW} &nbsp; <span class="cg-silver">★</span> ${silverW} &nbsp; ➕ ${bonusW}</div>
       <div class="ds-leader">Last week: ${fmtStars(lastW)}</div>
     </div>`;
 
