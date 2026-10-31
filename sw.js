@@ -1,5 +1,7 @@
 // KidQuest service worker: lets the app open with no internet.
 // App files: network first (so updates arrive), cached copy when offline.
+// The network fetch asks the server whether each file changed (no-cache), instead of
+// reusing the browser's copy for up to 10 minutes (GitHub Pages' max-age=600).
 // Fonts and the Firebase library: cached once, they're versioned.
 // Firebase data traffic is left alone — Firestore has its own offline cache.
 const CACHE = 'kq-v2';
@@ -44,7 +46,7 @@ self.addEventListener('fetch', e => {
 
   if (url.origin === location.origin) {
     e.respondWith(
-      fetch(req)
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then(res => {
           if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
           return res;
