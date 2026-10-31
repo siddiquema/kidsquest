@@ -105,7 +105,7 @@ function playStory(id){
   document.getElementById('sc-'+id).classList.add('playing');
   document.getElementById('sb-'+id).textContent='⏸';
   document.getElementById('nowPlayingBanner').style.display='flex';
-  document.getElementById('nowPlayingText').textContent='📖 '+story.title;
+  document.getElementById('nowPlayingText').textContent=(story.song?'🎵 ':'📖 ')+story.title;
   renderPlaylist();
   // reset progress bar
   const fill=document.getElementById('sp-'+id);
@@ -135,7 +135,8 @@ function playStoryAudio(id,token){
   a.playbackRate=storyAudioRate();
   a.play().catch(fallback);
 }
-function storyAudioRate(){ return storySpeed/0.9; } // Normal (0.9) plays the recording as made
+// Normal (0.9) plays the recording as made; songs always play as made
+function storyAudioRate(){ return STORIES.find(s=>s.id===activeStoryId)?.song ? 1 : storySpeed/0.9; }
 
 function playStoryTTS(token){
   if(!window.speechSynthesis){ stopStory(); showToast('Speech not supported'); return; }

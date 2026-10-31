@@ -214,4 +214,20 @@ const STORIES = [
       "Tomorrow night: a camel that chose a very special place in Madinah."
     ]
   },
+  // ── songs: recordings only (song:true plays at normal speed whatever the speed buttons say) ──
+  {
+    id:'song-big-worlds', emoji:'🪐', title:'Eight Big Worlds to See', song:true,
+    desc:'Song · sing along with the eight planets',
+    sentences:[ "This song needs the internet the first time it plays. Please try again when you're online." ]
+  },
+  {
+    id:'song-stomp', emoji:'💃', title:'Solar System Stomp', song:true,
+    desc:'Song · get up and dance!',
+    sentences:[ "This song needs the internet the first time it plays. Please try again when you're online." ]
+  },
+  {
+    id:'song-spin', emoji:'🌙', title:'Eight Worlds Spin Around', song:true,
+    desc:'Song · a quiet one for sleepy time',
+    sentences:[ "This song needs the internet the first time it plays. Please try again when you're online." ]
+  },
 ];
