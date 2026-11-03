@@ -230,4 +230,14 @@ const STORIES = [
     desc:'Song · a quiet one for sleepy time',
     sentences:[ "This song needs the internet the first time it plays. Please try again when you're online." ]
   },
+  {
+    id:'song-goodnight-astronaut', emoji:'🧑‍🚀', title:'Goodnight Little Astronaut', song:true,
+    desc:'Song · a goodnight song for bedtime',
+    sentences:[ "This song needs the internet the first time it plays. Please try again when you're online." ]
+  },
+  {
+    id:'song-thoongu-kanne', emoji:'💤', title:'Thoongu Kanne', song:true,
+    desc:'Song · a lullaby for sleepy time',
+    sentences:[ "This song needs the internet the first time it plays. Please try again when you're online." ]
+  },
 ];
