@@ -269,6 +269,7 @@
   <button class="tab-btn"         onclick="switchTab('timers',this)">⏱️ Timers</button>
   <button class="tab-btn parent-only" onclick="switchTab('alarms',this)">⏰ Wake Up</button>
   <button class="tab-btn"         onclick="switchTab('stories',this)">📖 Stories</button>
+  <button class="tab-btn"         onclick="switchTab('songs',this)">🎵 Songs</button>
 </div>
 
 <!-- LEADERBOARD PANEL -->
@@ -341,9 +342,9 @@
 <!-- STORIES PANEL -->
 <div class="panel" id="panel-stories">
   <div class="sec-label">Bedtime stories 🌙</div>
-  <div class="now-playing-banner" id="nowPlayingBanner" style="display:none;">
+  <div class="now-playing-banner" style="display:none;">
     <div class="wave-bars"><span></span><span></span><span></span><span></span></div>
-    <span id="nowPlayingText">Playing...</span>
+    <span class="now-playing-text">Playing...</span>
     <button class="stop-btn" onclick="stopStory()">✕ Stop</button>
   </div>
   <div class="story-speed-row">
@@ -354,6 +355,19 @@
   </div>
   <div class="story-playlist" id="storyPlaylist" style="display:none;"></div>
   <div class="stories-list" id="storiesList"></div>
+  <div style="height:20px"></div>
+</div>
+
+<!-- SONGS PANEL -->
+<div class="panel" id="panel-songs">
+  <div class="sec-label">Songs to sing along 🎶</div>
+  <div class="now-playing-banner" style="display:none;">
+    <div class="wave-bars"><span></span><span></span><span></span><span></span></div>
+    <span class="now-playing-text">Playing...</span>
+    <button class="stop-btn" onclick="stopStory()">✕ Stop</button>
+  </div>
+  <div class="story-playlist" id="songPlaylist" style="display:none;"></div>
+  <div class="stories-list" id="songsList"></div>
   <div style="height:20px"></div>
 </div>
 

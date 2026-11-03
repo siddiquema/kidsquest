@@ -214,7 +214,7 @@ const STORIES = [
       "Tomorrow night: a camel that chose a very special place in Madinah."
     ]
   },
-  // ── songs: recordings only (song:true plays at normal speed whatever the speed buttons say) ──
+  // ── songs: listed on the Songs tab; recordings only (song:true plays at normal speed whatever the speed buttons say) ──
   {
     id:'song-big-worlds', emoji:'🪐', title:'Eight Big Worlds to See', song:true,
     desc:'Song · sing along with the eight planets',

@@ -4,8 +4,9 @@
 // story
 let storyQueue=[], storySentIdx=0, activeStoryId=null;
 let storySpeed=0.9;
-// "Up next": story ids that play one after another without touching the screen
-let storyPlaylist=[];
+// "Up next": ids that play one after another without touching the screen.
+// Stories and songs each have their own list, on their own tab.
+let storyPlaylist=[], songPlaylist=[];
 const NEXT_STORY_GAP=2500; // ms of quiet between two stories
 
 // ═══════════════════════════════════════
@@ -20,23 +21,34 @@ function setSpeed(val,btn){
   showToast(`Story speed: ${val===0.75?'Slow':val===0.9?'Normal':'Fast'}`);
 }
 
-// Stories belong to a pack ('home' unless the story says otherwise); a family sees its own packs
+// Stories belong to a pack ('home' unless the story says otherwise); a family sees its own packs.
+// Songs (song:true) are in STORIES too, but listed on the Songs tab.
 function familyStories(){ return STORIES.filter(s=>FAMILY_PACKS.includes(s.pack||'home')); }
+function isSong(id){ return !!STORIES.find(s=>s.id===id)?.song; }
+function playlistOf(id){ return isSong(id) ? songPlaylist : storyPlaylist; }
 
+// Draws both tabs: stories on Stories, songs on Songs
 function renderStories(){
-  const list=familyStories();
+  const all=familyStories();
+  renderStoryList('storiesList', all.filter(s=>!s.song), '📚', 'Stories coming soon', "Your family's stories are being written. They'll appear here.");
+  renderStoryList('songsList', all.filter(s=>s.song), '🎵', 'Songs coming soon', "Your family's songs are on their way. They'll appear here.");
+  renderPlaylist();
+}
+
+function renderStoryList(boxId,list,emoji,title,desc){
+  const box=document.getElementById(boxId);
   if(!list.length){
-    document.getElementById('storiesList').innerHTML=`
+    box.innerHTML=`
       <div class="story-card"><div class="story-top">
-        <div class="story-emoji">📚</div>
+        <div class="story-emoji">${emoji}</div>
         <div class="story-meta">
-          <div class="story-title">Stories coming soon</div>
-          <div class="story-desc">Your family's stories are being written. They'll appear here.</div>
+          <div class="story-title">${title}</div>
+          <div class="story-desc">${desc}</div>
         </div>
       </div></div>`;
-    renderPlaylist(); return;
+    return;
   }
-  document.getElementById('storiesList').innerHTML=list.map(s=>`
+  box.innerHTML=list.map(s=>`
     <div class="story-card" id="sc-${s.id}">
       <div class="story-top">
         <div class="story-emoji">${s.emoji}</div>
@@ -49,46 +61,63 @@ function renderStories(){
       </div>
       <div class="story-progress-bar"><div class="story-progress-fill" id="sp-${s.id}"></div></div>
     </div>`).join('');
-  renderPlaylist();
 }
 
 // ── Up next ──
 function toggleQueued(id){
-  const i=storyPlaylist.indexOf(id);
-  if(i>=0) storyPlaylist.splice(i,1); else storyPlaylist.push(id);
+  const list=playlistOf(id);
+  const i=list.indexOf(id);
+  if(i>=0) list.splice(i,1); else list.push(id);
   renderPlaylist();
 }
 
-function clearPlaylist(){ storyPlaylist=[]; renderPlaylist(); }
+function clearPlaylist(songs){
+  if(songs) songPlaylist=[]; else storyPlaylist=[];
+  renderPlaylist();
+}
 
-function playPlaylist(){
+function playPlaylist(songs){
   if(activeStoryId) return; // already playing: the list follows on by itself
-  const next=storyPlaylist.shift();
+  const next=(songs?songPlaylist:storyPlaylist).shift();
   if(next) playStory(next);
 }
 
 function renderPlaylist(){
   STORIES.forEach(s=>{
     const b=document.getElementById('sa-'+s.id); if(!b) return;
-    const n=storyPlaylist.indexOf(s.id)+1;
+    const n=playlistOf(s.id).indexOf(s.id)+1;
     b.textContent=n?n:'＋';
     b.classList.toggle('queued',!!n);
     b.title=n?`Number ${n} in Up next — tap to remove`:'Add to Up next';
   });
-  const box=document.getElementById('storyPlaylist'); if(!box) return;
-  if(!storyPlaylist.length){ box.style.display='none'; return; }
+  renderUpNext('storyPlaylist',storyPlaylist,false);
+  renderUpNext('songPlaylist',songPlaylist,true);
+}
+
+function renderUpNext(boxId,list,songs){
+  const box=document.getElementById(boxId); if(!box) return;
+  if(!list.length){ box.style.display='none'; return; }
   box.style.display='';
-  const names=storyPlaylist.map((id,i)=>{
+  const names=list.map((id,i)=>{
     const s=STORIES.find(x=>x.id===id);
     return `<span class="pl-item">${i+1}. ${s.emoji} ${esc(s.title)}</span>`;
   }).join('');
   box.innerHTML=`
     <div class="pl-head">
       <span class="pl-label">Up next</span>
-      ${activeStoryId?'':'<button class="pl-play" onclick="playPlaylist()">▶ Play all</button>'}
-      <button class="pl-clear" onclick="clearPlaylist()">Clear</button>
+      ${activeStoryId?'':`<button class="pl-play" onclick="playPlaylist(${songs})">▶ Play all</button>`}
+      <button class="pl-clear" onclick="clearPlaylist(${songs})">Clear</button>
     </div>
     <div class="pl-items">${names}</div>`;
+}
+
+// The now-playing banner is on both tabs, so Stop is there whichever tab is open
+function showNowPlaying(text){
+  document.querySelectorAll('.now-playing-banner').forEach(b=>b.style.display='flex');
+  document.querySelectorAll('.now-playing-text').forEach(t=>t.textContent=text);
+}
+function hideNowPlaying(){
+  document.querySelectorAll('.now-playing-banner').forEach(b=>b.style.display='none');
 }
 
 function toggleStory(id){
@@ -99,13 +128,12 @@ function toggleStory(id){
 function playStory(id){
   const story=STORIES.find(s=>s.id===id); if(!story) return;
   // playing a queued story takes it off Up next
-  const qi=storyPlaylist.indexOf(id); if(qi>=0) storyPlaylist.splice(qi,1);
+  const queue=playlistOf(id), qi=queue.indexOf(id); if(qi>=0) queue.splice(qi,1);
   activeStoryId=id; storySentIdx=0; storyQueue=story.sentences; storyRetries=0;
   const token=++storyToken;
   document.getElementById('sc-'+id).classList.add('playing');
   document.getElementById('sb-'+id).textContent='⏸';
-  document.getElementById('nowPlayingBanner').style.display='flex';
-  document.getElementById('nowPlayingText').textContent=(story.song?'🎵 ':'📖 ')+story.title;
+  showNowPlaying((story.song?'🎵 ':'📖 ')+story.title);
   renderPlaylist();
   // reset progress bar
   const fill=document.getElementById('sp-'+id);
@@ -212,13 +240,12 @@ function storyFinished(){
   setTimeout(()=>{
     if(token!==storyToken) return; // Stop was pressed meanwhile
     stopStory();
-    const next=storyPlaylist[0];
+    const next=playlistOf(id)[0];
     if(!next) return;
     // a short quiet gap, then the next story starts on its own; Stop cancels it
     const waitToken=storyToken;
     const s=STORIES.find(x=>x.id===next);
-    document.getElementById('nowPlayingBanner').style.display='flex';
-    document.getElementById('nowPlayingText').textContent='⏭️ Next: '+s.title;
+    showNowPlaying('⏭️ Next: '+s.title);
     setTimeout(()=>{ if(waitToken===storyToken) playStory(next); }, NEXT_STORY_GAP);
   }, 800);
 }
@@ -236,7 +263,7 @@ function stopStory(){
     if(fill){ fill.style.transition='none'; fill.style.width='0%'; }
     activeStoryId=null;
   }
-  document.getElementById('nowPlayingBanner').style.display='none';
+  hideNowPlaying();
   renderPlaylist();
 }
 
