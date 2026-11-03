@@ -1,19 +1,5 @@
-// KidQuest — kids strip and Star Board
+// KidQuest — Star Board
 // Plain script: shares globals with the other files; load order is set in index.html.
-
-// ═══════════════════════════════════════
-//  KIDS STRIP
-// ═══════════════════════════════════════
-function renderKidsStrip(){
-  document.getElementById('kidsStrip').innerHTML=KIDS.map(k=>`
-    <div class="kid-chip">
-      <div class="kid-chip-emoji">${k.emoji}</div>
-      <div>
-        <div class="kid-chip-name" style="color:${k.color}">${esc(k.name)}</div>
-        <div class="kid-chip-age">${esc(k.age)} yrs</div>
-      </div>
-    </div>`).join('');
-}
 
 // ═══════════════════════════════════════
 //  STAR BOARD  (every star counts; each kid vs their own last week, no places)

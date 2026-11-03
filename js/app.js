@@ -24,7 +24,6 @@ function renderAll(){
   const f=document.activeElement;
   if(f?.tagName==='SELECT' && f.closest('.app-wrapper')){ setTimeout(scheduleRender,500); return; }
   applyRole();
-  renderKidsStrip();
   renderBoard();
   renderChartKidTabs();
   renderChart();
