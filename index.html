@@ -115,11 +115,12 @@
   <div class="onb-inner">
     <div class="onb-emoji">✏️</div>
     <div class="onb-title">Edit your family</div>
-    <div class="onb-sub">Change names, ages and PINs, add a kid, or remove someone. Leave a PIN box empty to keep the current PIN.</div>
+    <div class="onb-sub">Change names and ages, add a kid, or remove someone. Type a new PIN to change a kid's PIN, or leave it empty to keep it. Mum and Dad each change their own PIN with 🔐 Change my PIN.</div>
     <div class="ek-section">Kids</div>
     <div class="ob-kid-list" id="ekKidInputs"></div>
     <button class="onb-add" id="ekAddBtn" onclick="ekAddRow()">＋ Add a kid</button>
     <div class="ek-section">Parents</div>
+    <button class="onb-add" onclick="startChangePin()">🔐 Change my PIN</button>
     <div class="ob-kid-list" id="ekParentInputs"></div>
     <div class="ek-section">This device</div>
     <div class="ob-kid-list">
@@ -238,7 +239,7 @@
     </div>
 
     <button class="pin-forgot" id="pinForgot" onclick="forgotPin()">Forgot PIN?</button>
-    <button class="onb-back" onclick="showWhoPick()">← Back</button>
+    <button class="onb-back" onclick="pinBack()">← Back</button>
     </div>
   </div>
 </div>
