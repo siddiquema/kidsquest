@@ -382,6 +382,9 @@ body{
 .who-emoji{font-size:40px;}
 .who-name{font-family:'Fredoka One',cursive;font-size:16px;color:var(--kc,var(--text));max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ob-pin{width:74px;flex-shrink:0;text-align:center;}
+/* phones: slimmer age and PIN boxes leave the name box room */
+@media (max-width:599px){ .ob-age,.ob-pin{width:58px;padding-left:6px;padding-right:6px;} }
+@media (max-width:359px){ .ob-kid-row{gap:6px;} .ob-kid-emoji{width:26px;font-size:22px;} .ob-age,.ob-pin{width:50px;padding-left:4px;padding-right:4px;} .ob-del{width:32px;height:32px;} }
 .pw-input{width:100%;margin-bottom:12px;}
 .ek-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);text-align:left;margin:4px 4px 10px;}
 .ek-lock{display:flex;flex-direction:column;gap:6px;text-align:left;font-size:12px;font-weight:700;color:var(--muted);}
