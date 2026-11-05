@@ -507,6 +507,8 @@ function openEditKids(){
 }
 function closeEditKids(){ document.getElementById('editKids').classList.remove('show'); }
 
+// A parent's PIN isn't set here: each parent changes their own with Change my PIN,
+// which asks for the current PIN first.
 function ekRowHtml(list,r,i){
   const isKid=list==='ekKids';
   return `
@@ -516,8 +518,8 @@ function ekRowHtml(list,r,i){
         oninput="${list}[${i}].name=this.value">
       ${isKid?`<input class="ob-input ob-age" type="number" placeholder="Age" min="1" max="17" inputmode="numeric"
         oninput="${list}[${i}].age=this.value">`:''}
-      <input class="ob-input ob-pin" type="password" placeholder="${r.id?'New PIN':'PIN'}" maxlength="4" inputmode="numeric" autocomplete="off"
-        oninput="${list}[${i}].pin=this.value">
+      ${isKid||!r.id?`<input class="ob-input ob-pin" type="password" placeholder="${r.id?'New PIN':'PIN'}" maxlength="4" inputmode="numeric" autocomplete="off"
+        oninput="${list}[${i}].pin=this.value">`:''}
       <button class="ob-del" onclick="ekRemoveRow('${list}',${i})" title="Remove" ${(isKid?ekKids:ekParents).length<=1?'disabled':''}>✕</button>
     </div>`;
 }
