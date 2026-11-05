@@ -31,8 +31,9 @@ function freePoolIdx(used){
 let currentWho = null;      // { id, type }
 let pinTarget = null;       // profile whose PIN is being typed
 let pinEntry = '';
-let pinMode = 'unlock';     // 'unlock' | 'setup' | 'confirm'
+let pinMode = 'unlock';     // 'unlock' | 'check' | 'setup' | 'confirm'
 let pinFirstEntry = '';     // holds first PIN while choosing a new one
+let pinChanging = false;    // true while a signed-in person changes their own PIN
 
 function isParent(){ return currentWho?.type==='parent'; }
 
@@ -55,7 +56,7 @@ function showWho(){
 }
 
 function showWhoPick(){
-  pinTarget=null; pinEntry='';
+  pinTarget=null; pinEntry=''; pinChanging=false;
   document.getElementById('whoPin').style.display='none';
   document.getElementById('whoPick').style.display='block';
   renderWhoGrid();
@@ -100,6 +101,7 @@ function pickWho(id){
 function enterAs(id){
   const p=PROFILES[id]; if(!p) return;
   currentWho={ id, type:p.type }; ssSet('kq_who',id);
+  pinTarget=null; pinChanging=false;
   document.getElementById('lockScreen').classList.remove('show');
   chartKid=null;
   renderAll();
@@ -136,7 +138,7 @@ function updatePinDots(){
 
 function pinPress(n){
   if(pinEntry.length>=4) return;
-  if(pinMode==='unlock' && pinTarget && pinWaitSecs(pinTarget.id)){ pinError(waitMsg(pinTarget.id)); return; }
+  if((pinMode==='unlock' || pinMode==='check') && pinTarget && pinWaitSecs(pinTarget.id)){ pinError(waitMsg(pinTarget.id)); return; }
   pinEntry+=n;
   updatePinDots();
   if(pinEntry.length===4){ setTimeout(handlePinComplete,180); }
@@ -149,8 +151,11 @@ function pinDelete(){
 
 async function handlePinComplete(){
   if(!pinTarget) return;
-  if(pinMode==='unlock'){
-    if(await hashPin(pinTarget.id,pinEntry)===pinTarget.pinHash){ clearPinFails(pinTarget.id); enterAs(pinTarget.id); }
+  if(pinMode==='unlock' || pinMode==='check'){
+    if(await hashPin(pinTarget.id,pinEntry)===pinTarget.pinHash){
+      clearPinFails(pinTarget.id);
+      if(pinMode==='check') startNewPin(); else enterAs(pinTarget.id);
+    }
     else { notePinFail(pinTarget.id); pinError(pinWaitSecs(pinTarget.id) ? waitMsg(pinTarget.id) : 'Wrong PIN, try again'); }
   } else if(pinMode==='setup'){
     pinFirstEntry=pinEntry; pinEntry='';
@@ -206,6 +211,32 @@ async function submitPassword(){
   }catch(e){
     setLockText('🔑', pinTarget.name, e.code==='auth/network-request-failed'?'No internet — try again when online':'Wrong password', true);
   }
+}
+
+// ── Change my PIN (from Edit family): the current PIN first, then the new one twice ──
+function startChangePin(){
+  const p=currentWho && PROFILES[currentWho.id]; if(!p) return;
+  closeEditKids();
+  pinTarget={...p,id:currentWho.id};
+  pinChanging=true;
+  pinMode=p.pinHash?'check':'setup'; pinEntry=''; pinFirstEntry='';
+  document.getElementById('whoPick').style.display='none';
+  document.getElementById('whoPin').style.display='block';
+  document.getElementById('pwRow').style.display='none';
+  document.getElementById('pinPad').style.display='';
+  document.getElementById('pinForgot').style.display='none';
+  document.getElementById('lockScreen').classList.add('show');
+  if(!p.pinHash) startNewPin();
+  else if(pinWaitSecs(pinTarget.id)) setLockText('🔐', 'Change my PIN', waitMsg(pinTarget.id), true);
+  else setLockText('🔐', 'Change my PIN', 'Enter your current PIN');
+  updatePinDots();
+}
+
+// Back from the PIN pad: changing a PIN goes back to the app, unlocking goes back to Who's here
+function pinBack(){
+  if(!pinChanging){ showWhoPick(); return; }
+  pinTarget=null; pinEntry=''; pinChanging=false;
+  document.getElementById('lockScreen').classList.remove('show');
 }
 
 function startNewPin(){
