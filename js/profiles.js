@@ -336,19 +336,28 @@ async function createNewFamily(){
 
 // A one-time code for another family (shown in Edit family, for the 'home' family only)
 async function makePilotCode(){
-  const btn=document.getElementById('pcBtn'); btn.disabled=true;
+  const btn=document.getElementById('pcBtn');
+  const out=document.getElementById('pcOut');
+  // Errors go in the box under the button: a toast would sit behind this full-screen panel.
+  const fail=msg=>{ out.textContent='⚠️ '+msg; out.style.display=''; };
+  // With Firestore's offline cache the write would wait for the internet without ever failing
+  if(!navigator.onLine){ fail('No internet connection — connect and try again.'); return; }
+  btn.disabled=true; btn.textContent='Making a code…';
   try{
     const code=await store.makePilotCode();
     const link=location.origin+location.pathname;
-    const out=document.getElementById('pcOut');
     out.innerHTML=`Family code<span class="code">${code}</span>Open <b>${esc(link)}</b>, tap <b>Start a family</b> and enter this code. It works once.
       <button class="onb-add" onclick="copyPilotCode()">📋 Copy message</button>`;
     out.dataset.msg=`Here's your KidQuest family code: ${code}
 Open ${link} on your phone, tap "New to KidQuest? Start a family" and enter the code. It works once.`;
     out.style.display='';
   }catch(e){
-    console.error(e); showToast('⚠️ Couldn’t make a code — check the internet');
-  }finally{ btn.disabled=false; }
+    console.error(e);
+    fail(e.code==='permission-denied'
+      ? 'This login isn’t allowed to make family codes. Check that the latest firestore.rules are published in the Firebase console.'
+      : e.code==='unavailable' ? 'No internet connection — connect and try again.'
+      : `Couldn’t make a code (${e.code||e.message||'unknown error'}).`);
+  }finally{ btn.disabled=false; btn.textContent='＋ Make a family code'; }
 }
 function copyPilotCode(){
   const msg=document.getElementById('pcOut').dataset.msg;

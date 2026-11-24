@@ -224,7 +224,7 @@ body{
 .stop-btn{margin-left:auto;background:none;border:none;color:var(--meal);font-size:14px;font-weight:700;cursor:pointer;padding:4px 8px;}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:linear-gradient(135deg,var(--green),#05b38a);color:#0d1b2a;font-size:13px;font-weight:700;padding:10px 20px;border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:999;white-space:nowrap;transition:transform .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:linear-gradient(135deg,var(--green),#05b38a);color:#0d1b2a;font-size:13px;font-weight:700;padding:10px 20px;border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:5000;white-space:nowrap;transition:transform .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 
 /* ── STAR BURST ── */
